@@ -1,6 +1,6 @@
 import '../../css/table.css';
 import '../../css/form.css';
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CTable,
   CTableHead,
@@ -25,7 +25,6 @@ import axiosInstance from 'src/axiosInstance';
 import { formatDate, formatDateTime } from 'src/utils/FormatDateTime';
 import ReportSearchmodel from './ReportSearchModel';
 import Swal from 'sweetalert2';
-import { AuthContext } from 'src/context/AuthContext';
 
 const ReportSubmissionList = () => {
   const [data, setData] = useState([]);
@@ -46,16 +45,6 @@ const ReportSubmissionList = () => {
   
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const userRole = (user?.role?.roleTitle || '').toLowerCase();
-  const { refreshReportStatus } = useContext(AuthContext);
- 
-  useEffect(() => {
-    // Self-heal: whenever this page loads, re-check the real submission
-    // status so a stale "missed" flag from an earlier month/session doesn't
-    // keep restricting the sidebar after the report has actually been submitted.
-    if (refreshReportStatus) {
-      refreshReportStatus();
-    }
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -334,7 +323,7 @@ const ReportSubmissionList = () => {
       ];
       const csvData = exportData.map(item => [
         formatDate(item.date || ''),
-        item.center?.centerName || '',
+        item.closingCenter?.centerName || '',
         item.remark || '',
         formatDateTime(item.createdAt || ''),
         item.createdBy?.email || '',
@@ -498,10 +487,10 @@ const ReportSubmissionList = () => {
             <CTableHead>
               <CTableRow>
                 <CTableHeaderCell scope="col" onClick={() => handleSort('date')} className="sortable-header">
-                   Date {getSortIcon('username')}
+                   Date {getSortIcon('date')}
                 </CTableHeaderCell>
-                <CTableHeaderCell scope="col" onClick={() => handleSort('center.centerName')} className="sortable-header">
-                 Branch {getSortIcon('center.centerName')}
+                <CTableHeaderCell scope="col" onClick={() => handleSort('closingCenter.centerName')} className="sortable-header">
+                 Branch {getSortIcon('closingCenter.centerName')}
                 </CTableHeaderCell>
                 <CTableHeaderCell scope="col" onClick={() => handleSort('remark')} className="sortable-header">
                   Remark {getSortIcon('remark')}
@@ -512,8 +501,8 @@ const ReportSubmissionList = () => {
                 <CTableHeaderCell scope="col" onClick={() => handleSort('createdBy.fullname')} className="sortable-header">
                   Created By {getSortIcon('createdBy.fullname')}
                 </CTableHeaderCell>
-                <CTableHeaderCell scope="col" onClick={() => handleSort('remark')} className="sortable-header">
-                  Approve Remark {getSortIcon('remark')}
+                <CTableHeaderCell scope="col" onClick={() => handleSort('approvedRemark')} className="sortable-header">
+                  Approve Remark {getSortIcon('approvedRemark')}
                 </CTableHeaderCell>
                {userRole === 'admin' &&  <CTableHeaderCell>
                   Options
@@ -534,15 +523,11 @@ const ReportSubmissionList = () => {
                         {formatDate(customer.date || '')}
                       </button>
                     </CTableDataCell>
-                    <CTableDataCell>{customer.center?.centerName || 'N/A'}</CTableDataCell>
+                    <CTableDataCell>{customer.closingCenter?.centerName || 'N/A'}</CTableDataCell>
                     <CTableDataCell>{customer.remark || ''}</CTableDataCell>
                     <CTableDataCell>{formatDateTime(customer.createdAt || 'N/A')}</CTableDataCell>
                     <CTableDataCell>{customer.createdBy?.email || 'N/A'}</CTableDataCell>
-                    <CTableDataCell>
-                      {customer.status === 'Approved' || customer.status === 'Duplicate'
-                        ? (customer.approvedRemark || customer.status)
-                        : <span className="badge bg-warning text-dark">Awaited</span>}
-                    </CTableDataCell>
+                    <CTableDataCell>{customer.approvedRemark || ''}</CTableDataCell>
                     {(userRole === 'admin' || userRole === 'superadmin')  &&  <CTableDataCell>
                     <div className="dropdown-container" ref={el => dropdownRefs.current[customer._id] = el}>
                         <CButton 

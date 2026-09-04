@@ -554,7 +554,7 @@ const ProductSerialTrack = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [activeSearch, setActiveSearch] = useState({  
-    product: '', 
+    productId: '', 
     status: '', 
     keyword: '',
     reseller: '',
@@ -593,8 +593,8 @@ const ProductSerialTrack = () => {
       setError(null);
       const params = new URLSearchParams();
       
-      if (searchParams.product) {
-        params.append('product', searchParams.product);
+      if (searchParams.productId) {
+        params.append('productId', searchParams.productId);
       }
       if (searchParams.status) {
         params.append('status', searchParams.status);
@@ -736,7 +736,7 @@ const ProductSerialTrack = () => {
 
   const handleResetSearch = () => {
     setActiveSearch({ 
-      product: '', 
+      productId: '', 
       status: '', 
       keyword: '',
       reseller: '',
@@ -749,7 +749,7 @@ const ProductSerialTrack = () => {
   };
 
   const isSearchActive = () => {
-    return activeSearch.product || 
+    return activeSearch.productId || 
            activeSearch.status || 
            activeSearch.keyword ||
            activeSearch.reseller ||
@@ -824,8 +824,8 @@ const ProductSerialTrack = () => {
       
       const params = new URLSearchParams();
       
-      if (activeSearch.product) {
-        params.append('product', activeSearch.product);
+      if (activeSearch.productId) {
+        params.append('productId', activeSearch.productId);
       }
       if (activeSearch.status) {
         params.append('status', activeSearch.status);

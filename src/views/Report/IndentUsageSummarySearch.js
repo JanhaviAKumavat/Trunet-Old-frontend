@@ -17,7 +17,7 @@ import { showError } from 'src/utils/sweetAlerts';
 
 const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, products }) => {
   const [searchData, setSearchData] = useState({
-    product: '',
+    productId: '',
     center: '',
     reseller: '',
     startDate: '',
@@ -80,7 +80,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
   useEffect(() => {
     if (!visible) {
       setSearchData({ 
-        product: '', 
+        productId: '', 
         center: '', 
         reseller: '',
         startDate: '', 
@@ -126,13 +126,13 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
     // Prepare API search data
     const apiSearchData = {};
 
-    // Handle product - find the product and use its ID
-    if (searchData.product) {
-      const selectedProduct = products.find(p => p._id === searchData.product);
+    // Handle product - use productId
+    if (searchData.productId) {
+      const selectedProduct = products.find(p => p._id === searchData.productId);
       if (selectedProduct) {
-        apiSearchData.product = selectedProduct._id; // Send the ID
+        apiSearchData.productId = selectedProduct._id;
       } else {
-        apiSearchData.product = searchData.product;
+        apiSearchData.productId = searchData.productId;
       }
     }
 
@@ -140,7 +140,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
     if (searchData.center && searchData.center !== 'all') {
       const selectedCenter = resellerCenters.find(c => c._id === searchData.center);
       if (selectedCenter) {
-        apiSearchData.center = selectedCenter._id; // Send the ID
+        apiSearchData.center = selectedCenter._id;
       } else {
         apiSearchData.center = searchData.center;
       }
@@ -148,11 +148,11 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
       apiSearchData.center = 'all';
     }
 
-    // FIXED: Handle reseller - Send the ID as resellerId (not reseller)
+    // Handle reseller - Send the ID as resellerId
     if (searchData.reseller) {
       const selectedReseller = resellers.find(r => r._id === searchData.reseller);
       if (selectedReseller) {
-        apiSearchData.resellerId = selectedReseller._id; // Send as resellerId with the ID
+        apiSearchData.resellerId = selectedReseller._id;
       } else {
         apiSearchData.resellerId = searchData.reseller;
       }
@@ -170,14 +170,14 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
 
   const handleReset = () => {
     setSearchData({ 
-      product: '', 
+      productId: '', 
       center: '', 
       reseller: '',
       startDate: '', 
       endDate: '' 
     });
     setResellerCenters([]);
-    onSearch({ product: '', center: '', reseller: '', startDate: '', endDate: '' })
+    onSearch({ productId: '', center: '', resellerId: '', startDate: '', endDate: '' })
     onClose()
   }
 
@@ -282,14 +282,14 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
             </label>
             <Select
               id="product"
-              name="product"
+              name="productId"
               placeholder="Search Product..."
               value={
-                searchData.product
+                searchData.productId
                   ? {
-                      value: searchData.product,
-                      label: products.find((p) => p._id === searchData.product)
-                        ? products.find((p) => p._id === searchData.product).productTitle
+                      value: searchData.productId,
+                      label: products.find((p) => p._id === searchData.productId)
+                        ? products.find((p) => p._id === searchData.productId).productTitle
                         : ""
                     }
                   : null
@@ -297,7 +297,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
               onChange={(selected) =>
                 setSearchData((prev) => ({
                   ...prev,
-                  product: selected ? selected.value : ""
+                  productId: selected ? selected.value : ""
                 }))
               }
               options={products.map((product) => ({

@@ -196,7 +196,7 @@
 
 
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import {
   CModal,
   CModalHeader,
@@ -206,9 +206,9 @@ import {
   CButton,
   CFormInput,
   CFormLabel
-} from '@coreui/react'
-import PropTypes from 'prop-types'
-import '../../css/form.css'
+} from '@coreui/react';
+import PropTypes from 'prop-types';
+import '../../css/form.css';
 import Select from "react-select";
 import axiosInstance from 'src/axiosInstance';
 
@@ -219,7 +219,7 @@ const CommonSearch = ({ visible, onClose, onSearch, centers, products }) => {
     reseller: '',
     startDate: '',
     endDate: ''
-  })
+  });
   
   const [resellers, setResellers] = useState([]);
   const [loadingResellers, setLoadingResellers] = useState(false);
@@ -285,12 +285,12 @@ const CommonSearch = ({ visible, onClose, onSearch, centers, products }) => {
       });
       setResellerCenters([]);
     }
-  }, [visible])
+  }, [visible]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setSearchData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setSearchData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSearch = () => {
     // Format dates to ensure they are in YYYY-MM-DD format
@@ -328,9 +328,9 @@ const CommonSearch = ({ visible, onClose, onSearch, centers, products }) => {
         ? `${formattedStartDate} to ${formattedEndDate}`
         : ''
     };
-    onSearch(formattedSearchData)
-    onClose()
-  }
+    onSearch(formattedSearchData);
+    onClose();
+  };
 
   const handleReset = () => {
     setSearchData({ 
@@ -341,8 +341,8 @@ const CommonSearch = ({ visible, onClose, onSearch, centers, products }) => {
       endDate: '' 
     });
     setResellerCenters([]);
-    onSearch({ product: '', center: '', reseller: '', startDate: '', endDate: '' })
-  }
+    onSearch({ product: '', center: '', reseller: '', startDate: '', endDate: '' });
+  };
 
   return (
     <CModal size="lg" visible={visible} onClose={onClose}>
@@ -510,8 +510,8 @@ const CommonSearch = ({ visible, onClose, onSearch, centers, products }) => {
         </CButton>
       </CModalFooter>
     </CModal>
-  )
-}
+  );
+};
 
 CommonSearch.propTypes = {
   visible: PropTypes.bool.isRequired,
@@ -519,6 +519,6 @@ CommonSearch.propTypes = {
   onSearch: PropTypes.func.isRequired,
   centers: PropTypes.array.isRequired,
   products: PropTypes.array.isRequired
-}
+};
 
-export default CommonSearch
+export default CommonSearch;

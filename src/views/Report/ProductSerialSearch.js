@@ -183,7 +183,7 @@ import axiosInstance from 'src/axiosInstance';
 
 const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
   const [searchData, setSearchData] = useState({
-    product: '',
+    productId: '',
     status: '',
     keyword: '',
     reseller: '',
@@ -248,7 +248,7 @@ const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
   useEffect(() => {
     if (!visible) {
       setSearchData({ 
-        product: '', 
+        productId: '', 
         status: '', 
         keyword: '',
         reseller: '',
@@ -277,7 +277,7 @@ const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
 
   const handleSearch = () => {
     const apiSearchData = {
-      product: searchData.product,
+      productId: searchData.productId,
       status: searchData.status,
       keyword: searchData.keyword,
       reseller: searchData.reseller,
@@ -291,7 +291,7 @@ const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
 
   const handleReset = () => {
     setSearchData({ 
-      product: '', 
+      productId: '', 
       status: '', 
       keyword: '',
       reseller: '',
@@ -300,7 +300,7 @@ const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
       endDate: ''
     });
     setResellerCenters([]);
-    onSearch({ product: '', status: '', keyword: '', reseller: '', center: '', startDate: '', endDate: '' })
+    onSearch({ productId: '', status: '', keyword: '', reseller: '', center: '', startDate: '', endDate: '' })
     onClose()
   }
 
@@ -400,20 +400,20 @@ const ProductSerialSearch = ({ visible, onClose, onSearch, products }) => {
             </label>
             <Select
               id="product"
-              name="product"
+              name="productId"
               placeholder="Search Product..."
               value={
-                searchData.product
+                searchData.productId
                   ? {
-                      value: searchData.product,
-                      label: products.find((p) => p._id === searchData.product)?.productTitle || ''
+                      value: searchData.productId,
+                      label: products.find((p) => p._id === searchData.productId)?.productTitle || ''
                     }
                   : null
               }
               onChange={(selected) =>
                 setSearchData((prev) => ({
                   ...prev,
-                  product: selected ? selected.value : ''
+                  productId: selected ? selected.value : ''
                 }))
               }
               options={products.map((product) => ({

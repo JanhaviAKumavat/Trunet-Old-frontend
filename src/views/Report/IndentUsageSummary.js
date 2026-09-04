@@ -47,7 +47,7 @@ const IndentUsageSummary = () => {
   const [exportMonth, setExportMonth] = useState('');
   const [activeSearch, setActiveSearch] = useState({
     center: '',
-    product: '',
+    productId: '',
     reseller: '',
     month: '',
     startDate: '',
@@ -101,8 +101,8 @@ const IndentUsageSummary = () => {
       if (searchParams.center) {
         params.append('center', cleanParamValue(searchParams.center));
       }
-      if (searchParams.product) {
-        params.append('product', cleanParamValue(searchParams.product));
+      if (searchParams.productId) {
+        params.append('productId', cleanParamValue(searchParams.productId));
       }
       if (searchParams.resellerId) {
         params.append('resellerId', cleanParamValue(searchParams.resellerId));
@@ -313,7 +313,7 @@ const IndentUsageSummary = () => {
   const handleResetSearch = () => {
     setActiveSearch({
       center: '',
-      product: '',
+      productId: '',
       reseller: '',
       month: '',
       startDate: '',
@@ -325,7 +325,7 @@ const IndentUsageSummary = () => {
 
   const isSearchActive = () => {
     return activeSearch.center ||
-           activeSearch.product ||
+           activeSearch.productId ||
            activeSearch.reseller ||
            activeSearch.month ||
            activeSearch.startDate ||
@@ -346,8 +346,8 @@ const IndentUsageSummary = () => {
       if (activeSearch.center) {
         params.append('center', cleanParamValue(activeSearch.center));
       }
-      if (activeSearch.product) {
-        params.append('product', cleanParamValue(activeSearch.product));
+      if (activeSearch.productId) {
+        params.append('productId', cleanParamValue(activeSearch.productId));
       }
       if (activeSearch.reseller) {
         params.append('resellerId', cleanParamValue(activeSearch.reseller));
@@ -714,15 +714,15 @@ const IndentUsageSummary = () => {
             <small className="text-muted">Leave empty to use current month or active search month</small>
           </div>
 
-          {(activeSearch.center || activeSearch.product) && (
+          {(activeSearch.center || activeSearch.productId) && (
             <div className="mt-3 p-2 bg-light rounded">
               <strong>Current Filters:</strong>
               <ul className="mb-0 mt-1">
                 {activeSearch.center && (
                   <li><small>Center: {getCenterName(activeSearch.center)}</small></li>
                 )}
-                {activeSearch.product && (
-                  <li><small>Product: {getProductName(activeSearch.product)}</small></li>
+                {activeSearch.productId && (
+                  <li><small>Product: {getProductName(activeSearch.productId)}</small></li>
                 )}
                 {activeSearch.month && (
                   <li><small>Month: {getFormattedDateRange()}</small></li>
@@ -813,10 +813,10 @@ const IndentUsageSummary = () => {
               {filters?.center && (
                 <li><strong>Branch:</strong> {typeof filters.center === 'object' ? filters.center.name : filters.center}</li>
               )}
-              {activeSearch.product && (
+              {activeSearch.productId && (
                 <li>
                   <strong>Product:</strong>{' '}
-                  {getProductName(activeSearch.product)}
+                  {getProductName(activeSearch.productId)}
                 </li>
               )}
               {activeSearch.reseller && (

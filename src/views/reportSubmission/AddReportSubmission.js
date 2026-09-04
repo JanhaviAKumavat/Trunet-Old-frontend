@@ -2202,7 +2202,7 @@
 
 
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from 'src/axiosInstance';
 import '../../css/form.css';
@@ -2219,26 +2219,6 @@ import {
   CAlert
 } from '@coreui/react';
 import Select from 'react-select';
-import { AuthContext } from 'src/context/AuthContext';
-
-// Returns the correct default closing date:
-// - If today is early in the month (on/before cutoffDay), assume the user is
-//   closing LAST month's stock (common pattern: closing submitted 1-5 days
-//   into the next month) -> return last day of PREVIOUS month.
-// - Otherwise, assume closing for the CURRENT month -> return last day of
-//   current month (e.g. 31 in August, 30 in September).
-const getDefaultClosingDate = () => {
-  const now = new Date();
-  const cutoffDay = 5; // या आधी असेल तर मागचा महिना गृहीत धरा
-
-  if (now.getDate() <= cutoffDay) {
-    const lastDayPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-    return lastDayPrevMonth.toISOString().split('T')[0];
-  }
-
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return lastDay.toISOString().split('T')[0];
-};
 
 const AddReportSubmission = () => {
   const [productSearchTerm, setProductSearchTerm] = useState('');
@@ -2248,10 +2228,9 @@ const AddReportSubmission = () => {
   const [alert, setAlert] = useState({ type: '', message: '' });
   const navigate = useNavigate();
   const { id } = useParams();
-  const { refreshReportStatus } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
-    date: getDefaultClosingDate(),
+    date: new Date().toISOString().split('T')[0],
     remark: '',
   });
 
@@ -2288,7 +2267,7 @@ const AddReportSubmission = () => {
       const data = res.data.data;
       
       setFormData({
-        date: data.date ? new Date(data.date).toISOString().split('T')[0] : getDefaultClosingDate(),
+        date: data.date ? new Date(data.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         remark: data.remark || '',
       });      
       
@@ -2371,9 +2350,9 @@ const AddReportSubmission = () => {
       selectedRows[productId].comment !== ''
     );
 
-    if (!hasProductData) {
-      newErrors.products = 'At least one product must have data';
-    }
+    // if (!hasProductData) {
+    //   newErrors.products = 'At least one product must have data';
+    // }
 
     if (Object.keys(newErrors).length) {
       setErrors(newErrors);
@@ -2412,13 +2391,7 @@ const AddReportSubmission = () => {
         await axiosInstance.post('/reportsubmission', submissionData);
         setAlert({ type: 'success', message: 'Report submission created successfully!' });
       }
-
-      // Re-check missed-submission status right away so the sidebar unlocks
-      // immediately instead of staying restricted until the next login.
-      if (refreshReportStatus) {
-        await refreshReportStatus();
-      }
-
+      
       setTimeout(() => navigate('/report-submission'), 1500);
     } catch (error) {
       console.error('Error saving shifting request:', error);
@@ -2606,46 +2579,52 @@ const AddReportSubmission = () => {
                         <CTableHeaderCell>Comment</CTableHeaderCell>
                       </CTableRow>
                     </CTableHead>
-                    <CTableBody>
-                      {filteredProducts.length > 0 ? (
-                        filteredProducts.map((p, index) => (
-                          <CTableRow key={p.productId}>
-                            <CTableDataCell>
-                              {index + 1}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {p.productName}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {p.currentStock?.warehouse?.available || p.currentStock?.center?.available || 0}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {/* Product Qty - Display as plain text, non-editable */}
-                              {selectedRows[p.productId]?.productQty || 0}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {/* Damage Qty - Display as plain text, non-editable */}
-                              {selectedRows[p.productId]?.damageQty || 0}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {/* Comment - Keep as editable input field */}
-                              <CFormInput
-                                type="text"
-                                value={selectedRows[p.productId]?.comment || ''}
-                                onChange={(e) => handleRowInputChange(p.productId, 'comment', e.target.value)}
-                                placeholder="Add comment..."
-                              />
-                            </CTableDataCell>
-                          </CTableRow>
-                        ))
-                      ) : (
-                        <CTableRow>
-                          <CTableDataCell colSpan={6} className="text-center">
-                            No products found
-                          </CTableDataCell>
-                        </CTableRow>
-                      )}
-                    </CTableBody>
+                 <CTableBody>
+  {filteredProducts.length > 0 ? (
+    filteredProducts.map((p, index) => (
+      <CTableRow key={p.productId}>
+        <CTableDataCell>
+          {index + 1}
+        </CTableDataCell>
+        <CTableDataCell>
+          {p.productName}
+        </CTableDataCell>
+        <CTableDataCell>
+          {p.currentStock?.warehouse?.available || p.currentStock?.center?.available || 0}
+        </CTableDataCell>
+        <CTableDataCell>
+          {/* Product Qty - NOW EDITABLE */}
+          <CFormInput
+            type="number"
+            min="0"
+            value={selectedRows[p.productId]?.productQty || 0}
+            onChange={(e) => handleRowInputChange(p.productId, 'productQty', e.target.value)}
+            placeholder="0"
+          />
+        </CTableDataCell>
+        <CTableDataCell>
+          {/* Damage Qty - REMAINS NON-EDITABLE */}
+          {selectedRows[p.productId]?.damageQty || 0}
+        </CTableDataCell>
+        <CTableDataCell>
+          {/* Comment - REMAINS EDITABLE */}
+          <CFormInput
+            type="text"
+            value={selectedRows[p.productId]?.comment || ''}
+            onChange={(e) => handleRowInputChange(p.productId, 'comment', e.target.value)}
+            placeholder="Add comment..."
+          />
+        </CTableDataCell>
+      </CTableRow>
+    ))
+  ) : (
+    <CTableRow>
+      <CTableDataCell colSpan={6} className="text-center">
+        No products found
+      </CTableDataCell>
+    </CTableRow>
+  )}
+</CTableBody>
                   </CTable>
                 </div>
               )}
