@@ -1132,18 +1132,18 @@ const UsageSummary = () => {
     const summaryMap = new Map();
     
     detailedData.forEach(item => {
-      const key = `${item.Center}|${item.Product}`;
+      // Use ProductId and Center as key
+      const key = `${item.Center}|${item.ProductId || item.Product}`;
       
       if (summaryMap.has(key)) {
         const existing = summaryMap.get(key);
-        existing.TotalQuantity += (item.Qty || 0);  // Using Qty field
+        existing.TotalQuantity += (item.Qty || 0);
       } else {
         summaryMap.set(key, {
           Center: item.Center,
-          CenterId: item.CenterId || `${item.Center?.replace(/\s/g, '_') || ''}`,
           Product: item.Product,
-          ProductId: item.ProductId || `${item.Product?.replace(/\s/g, '_') || ''}`,
-          TotalQuantity: item.Qty || 0  // Using Qty field
+          ProductId: item.ProductId || '',
+          TotalQuantity: item.Qty || 0
         });
       }
     });
@@ -1478,8 +1478,31 @@ const UsageSummary = () => {
     : 'N/A';
 
   const handleProductQuantityClick = (item) => {
-    if (item && item.ProductId && item.CenterId) {
-      navigate(`/usage-detail?product=${item.ProductId}&center=${item.CenterId}`);
+    console.log('Usage Summary item clicked:', item);
+    
+    // Find the center ID from the centers list using the center name
+    const center = centers.find(c => c.centerName === item.Center);
+    const centerId = center?._id || '';
+    const productId = item.ProductId || '';
+    
+    console.log('Found center:', center);
+    console.log('CenterId:', centerId);
+    console.log('ProductId:', productId);
+    
+    if (productId && centerId) {
+      // Navigate with state containing the IDs - using centerId and productId
+      navigate('/usage-detail', {
+        state: {
+          productId: productId,
+          centerId: centerId,
+          productName: item.Product,
+          centerName: item.Center,
+          fromSummary: true
+        }
+      });
+    } else {
+      console.error('Missing ProductId or CenterId:', item);
+      showError('Unable to navigate to details: missing product or center information');
     }
   };
   

@@ -46,9 +46,9 @@ const IndentUsageSummary = () => {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportMonth, setExportMonth] = useState('');
   const [activeSearch, setActiveSearch] = useState({
-    center: '',
+    centerId: '',
     productId: '',
-    reseller: '',
+    resellerId: '',
     month: '',
     startDate: '',
     endDate: ''
@@ -98,14 +98,15 @@ const IndentUsageSummary = () => {
       setError(null);
       const params = new URLSearchParams();
       
-      if (searchParams.center) {
-        params.append('center', cleanParamValue(searchParams.center));
+      // Changed from 'center' to 'centerId'
+      if (searchParams.centerId) {
+        params.append('centerId', cleanParamValue(searchParams.centerId));
       }
       if (searchParams.productId) {
         params.append('productId', cleanParamValue(searchParams.productId));
       }
       if (searchParams.resellerId) {
-        params.append('resellerId', cleanParamValue(searchParams.resellerId));
+        params.append('reseller', cleanParamValue(searchParams.resellerId));
       }
       if (searchParams.startDate && searchParams.endDate) {
         params.append('startDate', searchParams.startDate);
@@ -312,9 +313,9 @@ const IndentUsageSummary = () => {
 
   const handleResetSearch = () => {
     setActiveSearch({
-      center: '',
+      centerId: '',
       productId: '',
-      reseller: '',
+      resellerId: '',
       month: '',
       startDate: '',
       endDate: ''
@@ -324,9 +325,9 @@ const IndentUsageSummary = () => {
   };
 
   const isSearchActive = () => {
-    return activeSearch.center ||
+    return activeSearch.centerId ||
            activeSearch.productId ||
-           activeSearch.reseller ||
+           activeSearch.resellerId ||
            activeSearch.month ||
            activeSearch.startDate ||
            activeSearch.endDate;
@@ -343,14 +344,15 @@ const IndentUsageSummary = () => {
     
       const params = new URLSearchParams();
       
-      if (activeSearch.center) {
-        params.append('center', cleanParamValue(activeSearch.center));
+      // Changed from 'center' to 'centerId'
+      if (activeSearch.centerId) {
+        params.append('centerId', cleanParamValue(activeSearch.centerId));
       }
       if (activeSearch.productId) {
         params.append('productId', cleanParamValue(activeSearch.productId));
       }
-      if (activeSearch.reseller) {
-        params.append('resellerId', cleanParamValue(activeSearch.reseller));
+      if (activeSearch.resellerId) {
+        params.append('reseller', cleanParamValue(activeSearch.resellerId));
       }
       
       if (exportMonth) {
@@ -714,15 +716,18 @@ const IndentUsageSummary = () => {
             <small className="text-muted">Leave empty to use current month or active search month</small>
           </div>
 
-          {(activeSearch.center || activeSearch.productId) && (
+          {(activeSearch.centerId || activeSearch.productId || activeSearch.resellerId) && (
             <div className="mt-3 p-2 bg-light rounded">
               <strong>Current Filters:</strong>
               <ul className="mb-0 mt-1">
-                {activeSearch.center && (
-                  <li><small>Center: {getCenterName(activeSearch.center)}</small></li>
+                {activeSearch.centerId && (
+                  <li><small>Center: {getCenterName(activeSearch.centerId)}</small></li>
                 )}
                 {activeSearch.productId && (
                   <li><small>Product: {getProductName(activeSearch.productId)}</small></li>
+                )}
+                {activeSearch.resellerId && (
+                  <li><small>Reseller: {resellers.find(r => r._id === activeSearch.resellerId)?.businessName || 'Unknown Reseller'}</small></li>
                 )}
                 {activeSearch.month && (
                   <li><small>Month: {getFormattedDateRange()}</small></li>
@@ -819,10 +824,10 @@ const IndentUsageSummary = () => {
                   {getProductName(activeSearch.productId)}
                 </li>
               )}
-              {activeSearch.reseller && (
+              {activeSearch.resellerId && (
                 <li>
                   <strong>Reseller:</strong>{' '}
-                  {resellers.find(r => r._id === activeSearch.reseller)?.businessName || 'Unknown Reseller'}
+                  {resellers.find(r => r._id === activeSearch.resellerId)?.businessName || 'Unknown Reseller'}
                 </li>
               )}
               {summary && (

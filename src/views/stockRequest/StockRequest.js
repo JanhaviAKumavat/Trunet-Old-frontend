@@ -2754,7 +2754,18 @@ const StockRequest = () => {
   };
 
   useEffect(() => {
-    fetchData(activeSearch, activeTab, 1);
+    // If there's a product filter from navigation state, apply it
+    if (location.state?.productFilter) {
+      const initialSearch = {
+        ...activeSearch,
+        product: location.state.productFilter
+      };
+      setActiveSearch(initialSearch);
+      setProductName(location.state?.productName || '');
+      fetchData(initialSearch, activeTab, 1);
+    } else {
+      fetchData(activeSearch, activeTab, 1);
+    }
     fetchCenters();
     fetchResellers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2837,33 +2848,39 @@ const StockRequest = () => {
   };
 
   const handleTabChange = (tab) => {
-  setActiveTab(tab);
+    setActiveTab(tab);
 
-  setActiveSearch({
-    keyword: '',
-    center: '',
-    outlet: '',
-    status: '',
-    startDate: '',
-    endDate: '',
-    indentStartDate: '',
-    indentEndDate: ''
-  });
+    // Preserve the product filter when switching tabs
+    const newSearch = {
+      keyword: '',
+      center: '',
+      outlet: '',
+      status: '',
+      startDate: '',
+      endDate: '',
+      indentStartDate: '',
+      indentEndDate: '',
+      product: activeSearch.product // Keep the product filter
+    };
 
-  setSearchTerm('');
-};
+    setActiveSearch(newSearch);
+    setSearchTerm('');
+    
+    // Fetch data with the new tab and preserved product filter
+    fetchData(newSearch, tab, 1);
+  };
   
   const handleClick = (itemId) => {
-  navigate(`/stockRequest-profile/${itemId}`, {
-    state: {
-      productFilter: activeSearch.product,
-      productName: productName,
-      fromTransferReport: true,
-      isProductDetailView: true,
-      hideClearFilter: true
-    }
-  });
-};
+    navigate(`/stockRequest-profile/${itemId}`, {
+      state: {
+        productFilter: activeSearch.product,
+        productName: productName,
+        fromTransferReport: true,
+        isProductDetailView: true,
+        hideClearFilter: true
+      }
+    });
+  };
 
   const filteredCustomers = customers.filter(customer => {
     if (activeSearch.keyword || activeSearch.center || activeSearch.status || activeSearch.outlet || activeSearch.product) {

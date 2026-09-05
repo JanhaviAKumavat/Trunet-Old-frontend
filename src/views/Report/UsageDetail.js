@@ -1614,8 +1614,8 @@ const UsageDetail = () => {
   const [exportStartDate, setExportStartDate] = useState('');
   const [exportEndDate, setExportEndDate] = useState('');
   const [activeSearch, setActiveSearch] = useState({ 
-    center: '', 
-    product: '', 
+    centerId: '', 
+    productId: '', 
     startDate: '', 
     endDate: '',
     usageType: '',
@@ -1633,8 +1633,8 @@ const UsageDetail = () => {
     // Check for state first (from navigation)
     if (location.state?.productId && location.state?.centerId) {
       const filteredSearch = {
-        product: location.state.productId,
-        center: location.state.centerId,
+        productId: location.state.productId,
+        centerId: location.state.centerId,
         startDate: '',
         endDate: '',
         usageType: '',
@@ -1644,6 +1644,7 @@ const UsageDetail = () => {
         outlet: ''
       };
       
+      console.log('Setting filters from state:', filteredSearch);
       setActiveSearch(filteredSearch);
       fetchData(filteredSearch, 1);
       document.title = `Usage Details - ${location.state.productName || 'Product'} at ${location.state.centerName || 'Center'}`;
@@ -1651,13 +1652,13 @@ const UsageDetail = () => {
     // Check for URL params as fallback
     else {
       const params = new URLSearchParams(location.search);
-      const productParam = params.get('product');
-      const centerParam = params.get('center');
+      const productParam = params.get('productId');
+      const centerParam = params.get('centerId');
       
       if (productParam && centerParam) {
         const filteredSearch = {
-          product: productParam,
-          center: centerParam,
+          productId: productParam,
+          centerId: centerParam,
           startDate: '',
           endDate: '',
           usageType: '',
@@ -1667,6 +1668,7 @@ const UsageDetail = () => {
           outlet: ''
         };
         
+        console.log('Setting filters from URL params:', filteredSearch);
         setActiveSearch(filteredSearch);
         fetchData(filteredSearch, 1);
         
@@ -1695,11 +1697,21 @@ const UsageDetail = () => {
       // Use the provided searchParams or activeSearch
       const currentSearch = Object.keys(searchParams).length > 0 ? searchParams : activeSearch;
       
-      if (currentSearch.center) {
-        params.append('center', currentSearch.center);
+      // Log the filters being applied
+      console.log('Fetching Usage Detail with filters:', {
+        centerId: currentSearch.centerId,
+        productId: currentSearch.productId,
+        usageType: currentSearch.usageType,
+        connectionType: currentSearch.connectionType,
+        customer: currentSearch.customer
+      });
+      
+      // Only add parameters if they have values - using centerId and productId
+      if (currentSearch.centerId) {
+        params.append('centerId', currentSearch.centerId);
       }
-      if (currentSearch.product) {
-        params.append('product', currentSearch.product);
+      if (currentSearch.productId) {
+        params.append('productId', currentSearch.productId);
       }
       if (currentSearch.usageType) {
         params.append('usageType', currentSearch.usageType);
@@ -1717,14 +1729,8 @@ const UsageDetail = () => {
       
       params.append('page', page);
       
-      // Log the filters being applied
-      console.log('Fetching Usage Detail with filters:', {
-        center: currentSearch.center,
-        product: currentSearch.product,
-        url: params.toString() ? `/reports/usages?${params.toString()}` : '/reports/usages'
-      });
-      
       const url = params.toString() ? `/reports/usages?${params.toString()}` : '/reports/usages';
+      console.log('Final API URL:', url);
       
       const response = await axiosInstance.get(url);
       
@@ -1902,8 +1908,8 @@ const UsageDetail = () => {
 
   const handleResetSearch = () => {
     setActiveSearch({ 
-      center: '', 
-      product: '', 
+      centerId: '', 
+      productId: '', 
       startDate: '', 
       endDate: '',
       usageType: '',
@@ -1917,8 +1923,8 @@ const UsageDetail = () => {
   };
 
   const isSearchActive = () => {
-    return activeSearch.center || 
-           activeSearch.product || 
+    return activeSearch.centerId || 
+           activeSearch.productId || 
            activeSearch.startDate || 
            activeSearch.endDate ||
            activeSearch.usageType ||
@@ -1938,11 +1944,11 @@ const UsageDetail = () => {
     try {
       const params = new URLSearchParams();
   
-      if (activeSearch.center) {
-        params.append('center', activeSearch.center);
+      if (activeSearch.centerId) {
+        params.append('centerId', activeSearch.centerId);
       }
-      if (activeSearch.product) {
-        params.append('product', activeSearch.product);
+      if (activeSearch.productId) {
+        params.append('productId', activeSearch.productId);
       }
       if (activeSearch.usageType) {
         params.append('usageType', activeSearch.usageType);
@@ -2018,12 +2024,12 @@ const UsageDetail = () => {
       if (isSearchActive()) {
         const filterParts = [];
         
-        if (activeSearch.center) {
-          const centerName = centers.find(c => c._id === activeSearch.center)?.centerName || 'Center';
+        if (activeSearch.centerId) {
+          const centerName = centers.find(c => c._id === activeSearch.centerId)?.centerName || 'Center';
           filterParts.push(centerName.replace(/\s+/g, '_'));
         }
-        if (activeSearch.product) {
-          const productName = products.find(p => p._id === activeSearch.product)?.productTitle || 'Product';
+        if (activeSearch.productId) {
+          const productName = products.find(p => p._id === activeSearch.productId)?.productTitle || 'Product';
           filterParts.push(productName.replace(/\s+/g, '_'));
         }
         if (activeSearch.usageType) {
@@ -2222,15 +2228,15 @@ const UsageDetail = () => {
           </div>
 
           {/* Show current filters summary */}
-          {(activeSearch.center || activeSearch.product || activeSearch.usageType || activeSearch.connectionType || activeSearch.customer) && (
+          {(activeSearch.centerId || activeSearch.productId || activeSearch.usageType || activeSearch.connectionType || activeSearch.customer) && (
             <div className="mt-3 p-2 bg-light rounded">
               <strong>Current Filters:</strong>
               <ul className="mb-0 mt-1">
-                {activeSearch.center && (
-                  <li><small>Center: {centers.find(c => c._id === activeSearch.center)?.centerName}</small></li>
+                {activeSearch.centerId && (
+                  <li><small>Center: {centers.find(c => c._id === activeSearch.centerId)?.centerName}</small></li>
                 )}
-                {activeSearch.product && (
-                  <li><small>Product: {products.find(p => p._id === activeSearch.product)?.productTitle}</small></li>
+                {activeSearch.productId && (
+                  <li><small>Product: {products.find(p => p._id === activeSearch.productId)?.productTitle}</small></li>
                 )}
                 {activeSearch.usageType && (
                   <li><small>Usage Type: {activeSearch.usageType}</small></li>

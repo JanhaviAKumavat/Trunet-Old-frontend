@@ -18,7 +18,7 @@ import { showError } from 'src/utils/sweetAlerts';
 const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, products }) => {
   const [searchData, setSearchData] = useState({
     productId: '',
-    center: '',
+    centerId: '',  // Changed from 'center' to 'centerId'
     reseller: '',
     startDate: '',
     endDate: ''
@@ -70,7 +70,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
       } else {
         setResellerCenters([]);
         // Clear center selection when reseller is cleared
-        setSearchData(prev => ({ ...prev, center: '' }));
+        setSearchData(prev => ({ ...prev, centerId: '' }));
       }
     };
 
@@ -81,7 +81,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
     if (!visible) {
       setSearchData({ 
         productId: '', 
-        center: '', 
+        centerId: '',  // Changed from 'center' to 'centerId'
         reseller: '',
         startDate: '', 
         endDate: '' 
@@ -136,16 +136,16 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
       }
     }
 
-    // Handle center - use the ID
-    if (searchData.center && searchData.center !== 'all') {
-      const selectedCenter = resellerCenters.find(c => c._id === searchData.center);
+    // Handle center - use centerId (the actual center ID)
+    if (searchData.centerId) {
+      const selectedCenter = resellerCenters.find(c => c._id === searchData.centerId);
       if (selectedCenter) {
-        apiSearchData.center = selectedCenter._id;
+        apiSearchData.centerId = selectedCenter._id;  // Changed from 'center' to 'centerId'
+        console.log('Selected Center ID:', selectedCenter._id);
+        console.log('Selected Center Name:', selectedCenter.centerName);
       } else {
-        apiSearchData.center = searchData.center;
+        apiSearchData.centerId = searchData.centerId;  // Changed from 'center' to 'centerId'
       }
-    } else if (searchData.center === 'all') {
-      apiSearchData.center = 'all';
     }
 
     // Handle reseller - Send the ID as resellerId
@@ -164,6 +164,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
       apiSearchData.endDate = formatDateToDDMMYYYY(searchData.endDate);
     }
 
+    console.log('Search Data being sent:', apiSearchData);
     onSearch(apiSearchData);
     onClose();
   }
@@ -171,13 +172,13 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
   const handleReset = () => {
     setSearchData({ 
       productId: '', 
-      center: '', 
+      centerId: '',  // Changed from 'center' to 'centerId'
       reseller: '',
       startDate: '', 
       endDate: '' 
     });
     setResellerCenters([]);
-    onSearch({ productId: '', center: '', resellerId: '', startDate: '', endDate: '' })
+    onSearch({ productId: '', centerId: '', resellerId: '', startDate: '', endDate: '' })  // Changed from 'center' to 'centerId'
     onClose()
   }
 
@@ -211,7 +212,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
                 setSearchData((prev) => ({
                   ...prev,
                   reseller: selected ? selected.value : "",
-                  center: "" // Clear center when reseller changes
+                  centerId: "" // Clear center when reseller changes
                 }))
               }
               options={resellers.map((reseller) => ({
@@ -230,7 +231,7 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
             </label>
             <Select
               id="center"
-              name="center"
+              name="centerId"
               placeholder={
                 loadingCenters 
                   ? "Loading branches..." 
@@ -239,30 +240,25 @@ const IndentUsageSummarySearch = ({ visible, onClose, onSearch, centers, product
                     : "Select a reseller first"
               }
               value={
-                searchData.center
+                searchData.centerId
                   ? {
-                      value: searchData.center,
-                      label: searchData.center === "all"
-                        ? "All Centers"
-                        : resellerCenters.find((c) => c._id === searchData.center)
-                          ? `${resellerCenters.find((c) => c._id === searchData.center).centerName} (${resellerCenters.find((c) => c._id === searchData.center).centerCode || 'N/A'})`
-                          : ""
+                      value: searchData.centerId,
+                      label: resellerCenters.find((c) => c._id === searchData.centerId)
+                        ? `${resellerCenters.find((c) => c._id === searchData.centerId).centerName} (${resellerCenters.find((c) => c._id === searchData.centerId).centerCode || 'N/A'})`
+                        : ""
                     }
                   : null
               }
-              onChange={(selected) =>
+              onChange={(selected) => {
                 setSearchData((prev) => ({
                   ...prev,
-                  center: selected ? selected.value : ""
-                }))
-              }
-              options={[
-                ...(searchData.reseller ? [{ value: "all", label: "All Centers" }] : []),
-                ...resellerCenters.map((center) => ({
-                  value: center._id,
-                  label: `${center.centerName}`
-                }))
-              ]}
+                  centerId: selected ? selected.value : ""
+                }));
+              }}
+              options={resellerCenters.map((center) => ({
+                value: center._id,  // This is the actual center ID
+                label: `${center.centerName} (${center.centerCode || 'N/A'})`
+              }))}
               isClearable
               isDisabled={!searchData.reseller || loadingCenters}
               isLoading={loadingCenters}
