@@ -1,3 +1,1089 @@
+// import '../../css/table.css';
+// import '../../css/form.css';
+// import React, { useState, useEffect } from 'react';
+// import {
+//   CTable,
+//   CTableHead,
+//   CTableRow,
+//   CTableHeaderCell,
+//   CTableBody,
+//   CTableDataCell,
+//   CCard,
+//   CCardBody,
+//   CCardHeader,
+//   CButton,
+//   CSpinner,
+//   CFormLabel,
+//   CFormInput,
+//   CModal,
+//   CModalHeader,
+//   CModalTitle,
+//   CModalBody,
+//   CModalFooter
+// } from '@coreui/react';
+// import CIcon from '@coreui/icons-react';
+// import { cilArrowTop, cilArrowBottom, cilSearch, cilZoomOut } from '@coreui/icons';
+// import { CFormLabel as CFormLabelPro } from '@coreui/react-pro';
+// import axiosInstance from 'src/axiosInstance';
+// import Pagination from 'src/utils/Pagination';
+// import { showError, showSuccess } from 'src/utils/sweetAlerts';
+// import IndentUsageSummarySearch from './IndentUsageSummarySearch';
+// import { useNavigate } from 'react-router-dom';
+
+// const IndentUsageSummary = () => {
+//   const [data, setData] = useState([]);
+//   const [summary, setSummary] = useState(null);
+//   const [filters, setFilters] = useState(null);
+//   const [centers, setCenters] = useState([]);
+//   const [products, setProducts] = useState([]);
+//   const [resellers, setResellers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [exportLoading, setExportLoading] = useState(false);
+//   const [error, setError] = useState(null);
+//   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [searchModalVisible, setSearchModalVisible] = useState(false);
+//   const [exportModalVisible, setExportModalVisible] = useState(false);
+//   const [exportMonth, setExportMonth] = useState('');
+//   const [activeSearch, setActiveSearch] = useState({
+//     centerId: '',
+//     productId: '',
+//     resellerId: '',
+//     month: '',
+//     startDate: '',
+//     endDate: ''
+//   });
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [totalPages, setTotalPages] = useState(1);
+//   const navigate = useNavigate();
+
+//   // Helper function to clean parameter values (remove prefixes)
+//   const cleanParamValue = (value) => {
+//     if (!value) return value;
+//     const prefixes = ['center_', 'product_', 'reseller_', 'outlet_', 'warehouse_'];
+//     let cleaned = value;
+//     for (const prefix of prefixes) {
+//       if (cleaned.startsWith(prefix)) {
+//         cleaned = cleaned.replace(prefix, '');
+//       }
+//     }
+//     return cleaned;
+//   };
+
+//   // Helper function to get product name from ID
+//   const getProductName = (productId) => {
+//     if (!productId) return '';
+//     const cleaned = cleanParamValue(productId);
+//     if (cleaned.match(/^[0-9a-fA-F]{24}$/)) {
+//       const product = products.find(p => p._id === cleaned);
+//       return product ? product.productTitle : cleaned;
+//     }
+//     return cleaned;
+//   };
+
+//   // Helper function to get center name from ID
+//   const getCenterName = (centerId) => {
+//     if (!centerId) return '';
+//     const cleaned = cleanParamValue(centerId);
+//     if (cleaned.match(/^[0-9a-fA-F]{24}$/)) {
+//       const center = centers.find(c => c._id === cleaned);
+//       return center ? center.centerName : cleaned;
+//     }
+//     return cleaned;
+//   };
+
+//   const fetchData = async (searchParams = {}, page = 1) => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+//       const params = new URLSearchParams();
+      
+//       // Changed from 'center' to 'centerId'
+//       if (searchParams.centerId) {
+//         params.append('centerId', cleanParamValue(searchParams.centerId));
+//       }
+//       if (searchParams.productId) {
+//         params.append('productId', cleanParamValue(searchParams.productId));
+//       }
+//       if (searchParams.resellerId) {
+//         params.append('reseller', cleanParamValue(searchParams.resellerId));
+//       }
+//       if (searchParams.startDate && searchParams.endDate) {
+//         params.append('startDate', searchParams.startDate);
+//         params.append('endDate', searchParams.endDate);
+//       } else if (searchParams.month) {
+//         const [year, month] = searchParams.month.split('-');
+//         params.append('month', month);
+//         params.append('year', year);
+//       }
+//       params.append('page', page);
+      
+//       const url = params.toString()
+//         ? `/reports/indent-usage-summary?${params.toString()}`
+//         : '/reports/indent-usage-summary';
+
+//       console.log('Fetching Usage Summary URL:', url);
+//       const response = await axiosInstance.get(url);
+
+//       if (response.data.success) {
+//         // Transform data to match expected format - NEW STRUCTURE
+//         const transformedData = response.data.data.map(item => {
+//           const center = item.center || {};
+          
+//           // The data now has product-level fields directly
+//           return {
+//             _id: item.productId || item._id,
+//             center: {
+//               id: center.id || center._id || '',
+//               name: center.name || center.centerName || '',
+//               code: center.code || center.centerCode || '',
+//               _id: center.id || center._id || ''
+//             },
+//             productId: item.productId || '',
+//             productName: item.productName || 'Unknown Product',
+//             opening: item.opening || 0,
+//             purchase: item.purchase || 0,
+//             transferReceive: item.transferReceive || 0,
+//             return: item.return || 0,
+//             usage: item.usage || 0,
+//             transferGiven: item.transferGiven || 0,
+//             nc: item.nc || 0,
+//             convert: item.convert || 0,
+//             shifting: item.shifting || 0,
+//             buildingUsage: item.buildingUsage || 0,
+//             buildingDamage: item.buildingDamage || 0,
+//             other: item.other || 0,
+//             repair: item.repair || 0,
+//             damage: item.damage || 0,
+//             closing: item.closing || 0,
+//             distributed: item.distributed || 0,
+//             replaceReturn: item.replaceReturn || 0,
+//             replaceDamage: item.replaceDamage || 0,
+//             stolenCenter: item.stolenCenter || 0,
+//             stolenField: item.stolenField || 0,
+//           };
+//         });
+
+//         setData(transformedData);
+//         setSummary(response.data.summary || null);
+//         setFilters(response.data.filters || response.data.appliedFilters || null);
+//         setCurrentPage(response.data.pagination?.currentPage || 1);
+//         setTotalPages(response.data.pagination?.totalPages || 1);
+//       } else {
+//         const errorMessage = response.data.message || 'API returned unsuccessful response';
+//         setError(errorMessage);
+//         console.error('Backend error:', response.data);
+//       }
+//     } catch (err) {
+//       setError(err.message);
+//       console.error('Error fetching data:', err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const fetchCenters = async () => {
+//     try {
+//       const response = await axiosInstance.get('/centers');
+//       if (response.data.success) {
+//         setCenters(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching centers:', error);
+//     }
+//   };
+
+//   const fetchProducts = async () => {
+//     try {
+//       const response = await axiosInstance.get('/products/all');
+//       if (response.data.success) {
+//         setProducts(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching products:', error);
+//     }
+//   };
+
+//   const fetchResellers = async () => {
+//     try {
+//       const response = await axiosInstance.get('/resellers');
+//       if (response.data.success) {
+//         setResellers(response.data.data || []);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching resellers:', error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchData();
+//     fetchCenters();
+//     fetchProducts();
+//     fetchResellers();
+//   }, []);
+
+//   const handlePageChange = (page) => {
+//     if (page < 1 || page > totalPages) return;
+//     fetchData(activeSearch, page);
+//   };
+
+//   const calculateTotals = () => {
+//     const totals = {
+//       opening: 0,
+//       purchase: 0,
+//       transferReceive: 0,
+//       return: 0,
+//       usage: 0,
+//       transferGiven: 0,
+//       nc: 0,
+//       convert: 0,
+//       shifting: 0,
+//       buildingUsage: 0,
+//       buildingDamage: 0,
+//       other: 0,
+//       repair: 0,
+//       damage: 0,
+//       closing: 0,
+//       distributed: 0,
+//       replaceReturn: 0,
+//       replaceDamage: 0,
+//       stolenCenter: 0,
+//       stolenField: 0
+//     };
+
+//     data.forEach(item => {
+//       totals.opening += parseFloat(item.opening || 0);
+//       totals.purchase += parseFloat(item.purchase || 0);
+//       totals.transferReceive += parseFloat(item.transferReceive || 0);
+//       totals.return += parseFloat(item.return || 0);
+//       totals.usage += parseFloat(item.usage || 0);
+//       totals.transferGiven += parseFloat(item.transferGiven || 0);
+//       totals.nc += parseFloat(item.nc || 0);
+//       totals.convert += parseFloat(item.convert || 0);
+//       totals.shifting += parseFloat(item.shifting || 0);
+//       totals.buildingUsage += parseFloat(item.buildingUsage || 0);
+//       totals.buildingDamage += parseFloat(item.buildingDamage || 0);
+//       totals.other += parseFloat(item.other || 0);
+//       totals.repair += parseFloat(item.repair || 0);
+//       totals.damage += parseFloat(item.damage || 0);
+//       totals.closing += parseFloat(item.closing || 0);
+//       totals.distributed += parseFloat(item.distributed || 0);
+//       totals.replaceReturn += parseFloat(item.replaceReturn || 0);
+//       totals.replaceDamage += parseFloat(item.replaceDamage || 0);
+//       totals.stolenCenter += parseFloat(item.stolenCenter || 0);
+//       totals.stolenField += parseFloat(item.stolenField || 0);
+//     });
+
+//     return totals;
+//   };
+
+//   const handleSort = (key) => {
+//     let direction = 'ascending';
+//     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+//       direction = 'descending';
+//     }
+//     setSortConfig({ key, direction });
+
+//     const sortedData = [...data].sort((a, b) => {
+//       const aValue = a[key] || '';
+//       const bValue = b[key] || '';
+//       if (aValue < bValue) return direction === 'ascending' ? -1 : 1;
+//       if (aValue > bValue) return direction === 'ascending' ? 1 : -1;
+//       return 0;
+//     });
+
+//     setData(sortedData);
+//   };
+
+//   const getSortIcon = (key) =>
+//     sortConfig.key === key ? (
+//       sortConfig.direction === 'ascending'
+//         ? <CIcon icon={cilArrowTop} className="ms-1" />
+//         : <CIcon icon={cilArrowBottom} className="ms-1" />
+//     ) : null;
+
+//   const handleSearch = (searchData) => {
+//     const mergedSearchData = {
+//       ...activeSearch,
+//       ...searchData
+//     };
+//     setActiveSearch(mergedSearchData);
+//     fetchData(mergedSearchData, 1);
+//   };
+
+//   const handleResetSearch = () => {
+//     setActiveSearch({
+//       centerId: '',
+//       productId: '',
+//       resellerId: '',
+//       month: '',
+//       startDate: '',
+//       endDate: ''
+//     });
+//     setSearchTerm('');
+//     fetchData({}, 1);
+//   };
+
+//   const isSearchActive = () => {
+//     return activeSearch.centerId ||
+//            activeSearch.productId ||
+//            activeSearch.resellerId ||
+//            activeSearch.month ||
+//            activeSearch.startDate ||
+//            activeSearch.endDate;
+//   };
+
+//   const openExportModal = () => {
+//     setExportMonth(activeSearch.month || '');
+//     setExportModalVisible(true);
+//   };
+
+//   const generateDetailExport = async () => {
+//     try {
+//       setExportLoading(true);
+    
+//       const params = new URLSearchParams();
+      
+//       // Changed from 'center' to 'centerId'
+//       if (activeSearch.centerId) {
+//         params.append('centerId', cleanParamValue(activeSearch.centerId));
+//       }
+//       if (activeSearch.productId) {
+//         params.append('productId', cleanParamValue(activeSearch.productId));
+//       }
+//       if (activeSearch.resellerId) {
+//         params.append('reseller', cleanParamValue(activeSearch.resellerId));
+//       }
+      
+//       if (exportMonth) {
+//         const [year, month] = exportMonth.split('-');
+//         params.append('month', month);
+//         params.append('year', year);
+//       } else if (activeSearch.startDate && activeSearch.endDate) {
+//         params.append('startDate', activeSearch.startDate);
+//         params.append('endDate', activeSearch.endDate);
+//       } else if (activeSearch.month) {
+//         const [year, month] = activeSearch.month.split('-');
+//         params.append('month', month);
+//         params.append('year', year);
+//       }
+      
+//       params.append('export', 'true');
+//       const apiUrl = params.toString()
+//         ? `/reports/indent-usage-summary?${params.toString()}`
+//         : '/reports/indent-usage-summary';
+      
+//       const response = await axiosInstance.get(apiUrl);
+      
+//       if (!response.data.success) {
+//         throw new Error('API returned unsuccessful response');
+//       }
+  
+//       const exportData = response.data.data || [];
+      
+//       if (!exportData || exportData.length === 0) {
+//         showError('No data available for export');
+//         return;
+//       }
+  
+//       const headers = [
+//         'Center Name',
+//         'Center Code',
+//         'Product Name',
+//         'Opening',
+//         'Purchase',
+//         'Distributed',
+//         'Transfer Receive',
+//         'Replace Return',
+//         'Usage',
+//         'Transfer Given',
+//         'NC',
+//         'Convert',
+//         'Shifting',
+//         'Building new usage',
+//         'Building Damage',
+//         'Other',
+//         'Return',
+//         'Repair',
+//         'Damage',
+//         'Replace Damage',
+//         'Stolen Center',
+//         'Stolen Field',
+//         'Closing'
+//       ];
+  
+//       // Transform export data - NEW STRUCTURE
+//       const csvData = exportData.map(item => {
+//         const center = item.center || {};
+        
+//         return [
+//           center.name || center.centerName || '',
+//           center.code || center.centerCode || '',
+//           item.productName || '',
+//           item.opening || 0,
+//           item.purchase || 0,
+//           item.distributed || 0,
+//           item.transferReceive || 0,
+//           item.replaceReturn || 0,
+//           item.usage || 0,
+//           item.transferGiven || 0,
+//           item.nc || 0,
+//           item.convert || 0,
+//           item.shifting || 0,
+//           item.buildingUsage || 0,
+//           item.buildingDamage || 0,
+//           item.other || 0,
+//           item.return || 0,
+//           item.repair || 0,
+//           item.damage || 0,
+//           item.replaceDamage || 0,
+//           item.stolenCenter || 0,
+//           item.stolenField || 0,
+//           item.closing || 0
+//         ];
+//       });
+  
+//       let filename = `indent_usage_summary_report`;
+//       const resolvedFilters = response.data.filters || response.data.appliedFilters;
+
+//       if (resolvedFilters?.month && resolvedFilters?.year) {
+//         const monthName = new Date(
+//           resolvedFilters.year,
+//           resolvedFilters.month - 1
+//         ).toLocaleString('default', { month: 'long' });
+//         filename += `_${monthName}_${resolvedFilters.year}`;
+//       } else {
+//         filename += `_${new Date().toISOString().split('T')[0]}`;
+//       }
+//       filename += '.csv';
+  
+//       const csvContent = [
+//         headers.join(','),
+//         ...csvData.map(row => 
+//           row.map(field => {
+//             if(field === 0){
+//               return '"0"';
+//             } 
+//             const stringField = String(field || '');
+//             return `"${stringField.replace(/"/g, '""')}"`;
+//           }).join(',')
+//         )
+//       ].join('\n');
+  
+//       const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+//       const link = document.createElement('a');
+//       const downloadUrl = URL.createObjectURL(blob);
+      
+//       link.setAttribute('href', downloadUrl);
+//       link.setAttribute('download', filename);
+//       link.style.visibility = 'hidden';
+      
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+//       URL.revokeObjectURL(downloadUrl);
+      
+//       showSuccess('Export completed successfully!');
+//       setExportModalVisible(false);
+//       setExportMonth('');
+    
+//     } catch (error) {
+//       console.error('Error generating export:', error);
+//       showError('Error generating export file');
+//     } finally {
+//       setExportLoading(false);
+//     }
+//   };
+
+//   const formatDisplayDate = (isoString) => {
+//     if (!isoString) return '';
+//     const d = new Date(isoString);
+//     const day = String(d.getDate()).padStart(2, '0');
+//     const month = String(d.getMonth() + 1).padStart(2, '0');
+//     return `${day}-${month}-${d.getFullYear()}`;
+//   };
+
+//   const getFormattedDateRange = () => {
+//     if (filters?.dateRange?.startDate && filters?.dateRange?.endDate) {
+//       const start = new Date(filters.dateRange.startDate);
+//       const end = new Date(filters.dateRange.endDate);
+//       const startStr = `${String(start.getDate()).padStart(2, '0')}-${String(start.getMonth() + 1).padStart(2, '0')}-${start.getFullYear()}`;
+//       const endStr = `${String(end.getDate()).padStart(2, '0')}-${String(end.getMonth() + 1).padStart(2, '0')}-${end.getFullYear()}`;
+//       return `${startStr} to ${endStr}`;
+//     }
+
+//     if (filters?.month && filters?.year) {
+//       const monthName = new Date(filters.year, filters.month - 1)
+//         .toLocaleString('default', { month: 'long' });
+//       return `${monthName}-${filters.year}`;
+//     }
+
+//     if (activeSearch.startDate && activeSearch.endDate) {
+//       return `${activeSearch.startDate} to ${activeSearch.endDate}`;
+//     }
+
+//     if (activeSearch.month) {
+//       const [year, month] = activeSearch.month.split('-');
+//       const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'long' });
+//       return `${monthName}-${year}`;
+//     }
+//     const now = new Date();
+//     const currentMonth = now.toLocaleString('default', { month: 'long' });
+//     const currentYear = now.getFullYear();
+//     return `${currentMonth}-${currentYear}`;
+//   };
+
+//   const filteredData = data.filter(item => {
+//     if (isSearchActive()) {
+//       return true;
+//     }
+//     return Object.values(item).some(value => {
+//       if (typeof value === 'object' && value !== null) {
+//         return Object.values(value).some(nestedValue => 
+//           nestedValue && nestedValue.toString().toLowerCase().includes(searchTerm.toLowerCase())
+//         );
+//       }
+//       return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+//     });
+//   });
+
+//   const totals = calculateTotals();
+
+//   if (loading) {
+//     return (
+//       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+//         <CSpinner color="primary" />
+//       </div>
+//     );
+//   }
+
+//   const handleUsageClick = (item) => {
+//     if (item.usage > 0) {
+//       const productName = getProductName(item.productId);
+//       const centerName = getCenterName(item.center?.id || item.center?._id);
+      
+//       navigate('/usage-detail', {
+//         state: {
+//           product: productName,
+//           center: centerName,
+//           productId: item.productId || '',
+//           centerId: item.center?.id || item.center?._id || '',
+//           productName: item.productName || '',
+//           centerName: item.center?.name || item.center?.centerName || '',
+//           month: activeSearch.month || ''
+//         }
+//       });
+//     }
+//   };
+  
+//   const handleTransferReceiveClick = (item) => {
+//     if (item.transferReceive > 0) {
+//       const centerId = item.center?.id || item.center?._id || '';
+//       const productId = item.productId || '';
+      
+//       if (!centerId || !productId) {
+//         console.error('Missing center or product ID:', { centerId, productId });
+//         return;
+//       }
+      
+//       const productName = getProductName(productId);
+//       const centerName = getCenterName(centerId);
+      
+//       const params = new URLSearchParams({
+//         product: productName,
+//         center: centerName,
+//         transferType: 'receive'
+//       });
+//       navigate(`/transfer-detail?${params.toString()}`);
+//     }
+//   };
+
+//   const handleTransferGivenClick = (item) => {
+//     if (item.transferGiven > 0) {
+//       const centerId = item.center?.id || item.center?._id || '';
+//       const productId = item.productId || '';
+      
+//       if (!centerId || !productId) {
+//         console.error('Missing center or product ID:', { centerId, productId });
+//         return;
+//       }
+      
+//       const productName = getProductName(productId);
+//       const centerName = getCenterName(centerId);
+      
+//       const params = new URLSearchParams({
+//         product: productName,
+//         center: centerName,
+//         transferType: 'given'
+//       });
+//       navigate(`/transfer-detail?${params.toString()}`);
+//     }
+//   };
+  
+//   const handleFieldClick = (item, field, type) => {
+//     const value = item[field] || 0;
+//     if (value > 0) {
+//       const centerId = item.center?.id || item.center?._id || '';
+//       const productId = item.productId || '';
+      
+//       if (!centerId || !productId) {
+//         console.error('Missing center or product ID:', { centerId, productId });
+//         return;
+//       }
+      
+//       const productName = getProductName(productId);
+//       const centerName = getCenterName(centerId);
+      
+//       const params = new URLSearchParams({
+//         product: productName,
+//         center: centerName,
+//         usageType: type,
+//         productName: encodeURIComponent(item.productName || ''),
+//         centerName: encodeURIComponent(item.center?.name || item.center?.centerName || ''),
+//         month: activeSearch.month || ''
+//       });
+//       navigate(`/transaction-report?${params.toString()}`);
+//     }
+//   };
+
+//   const handleNcClick = (item) => handleFieldClick(item, 'nc', 'Customer');
+//   const handleConvertClick = (item) => handleFieldClick(item, 'convert', 'Customer');
+//   const handleShiftingClick = (item) => handleFieldClick(item, 'shifting', 'Customer');
+//   const handleBuildingUsageClick = (item) => handleFieldClick(item, 'buildingUsage', 'Building');
+//   const handleBuildingDamageClick = (item) => handleFieldClick(item, 'buildingDamage', 'building');
+//   const handleOtherClick = (item) => handleFieldClick(item, 'other', 'other');
+//   const handleDamageClick = (item) => handleFieldClick(item, 'damage', 'Damage');
+//   const handleRepairClick = (item) => handleFieldClick(item, 'repair', 'Customer');
+//   const handleReturnClick = (item) => handleFieldClick(item, 'return', 'Customer');
+
+//   const handlePurchaseClick = (item) => {
+//     if (item.purchase > 0) {
+//       const centerId = item.center?.id || item.center?._id || '';
+//       const productId = item.productId || '';
+      
+//       if (!centerId || !productId) {
+//         console.error('Missing center or product ID:', { centerId, productId });
+//         return;
+//       }
+      
+//       const productName = getProductName(productId);
+//       const centerName = getCenterName(centerId);
+      
+//       const params = new URLSearchParams({
+//         product: productName,
+//         center: centerName,
+//         productName: encodeURIComponent(item.productName || ''),
+//         centerName: encodeURIComponent(item.center?.name || item.center?.centerName || ''),
+//         month: activeSearch.month || '',
+//         transactionType: 'purchase'
+//       });
+      
+//       navigate(`/indent-detail?${params.toString()}`);
+//     }
+//   };
+
+//   if (error) {
+//     return <div className="alert alert-danger">{error}</div>;
+//   }
+
+//   return (
+//     <div>
+//       <div className='title'>Indent / Usage Summary Report</div>
+//       <IndentUsageSummarySearch
+//         visible={searchModalVisible}
+//         onClose={() => setSearchModalVisible(false)}
+//         onSearch={handleSearch}
+//         centers={centers}
+//         products={products}
+//       />
+
+//       {/* Export Modal */}
+//       <CModal visible={exportModalVisible} onClose={() => setExportModalVisible(false)} size="md">
+//         <CModalHeader>
+//           <CModalTitle>Export Indent / Usage Summary Report</CModalTitle>
+//         </CModalHeader>
+        
+//         <CModalBody>
+//           <div className="form-group mb-3">
+//             <CFormLabel htmlFor="exportMonth">Select Month (Optional)</CFormLabel>
+//             <CFormInput
+//               type="month"
+//               id="exportMonth"
+//               value={exportMonth}
+//               onChange={(e) => setExportMonth(e.target.value)}
+//               placeholder="Select month"
+//             />
+//             <small className="text-muted">Leave empty to use current month or active search month</small>
+//           </div>
+
+//           {(activeSearch.centerId || activeSearch.productId || activeSearch.resellerId) && (
+//             <div className="mt-3 p-2 bg-light rounded">
+//               <strong>Current Filters:</strong>
+//               <ul className="mb-0 mt-1">
+//                 {activeSearch.centerId && (
+//                   <li><small>Center: {getCenterName(activeSearch.centerId)}</small></li>
+//                 )}
+//                 {activeSearch.productId && (
+//                   <li><small>Product: {getProductName(activeSearch.productId)}</small></li>
+//                 )}
+//                 {activeSearch.resellerId && (
+//                   <li><small>Reseller: {resellers.find(r => r._id === activeSearch.resellerId)?.businessName || 'Unknown Reseller'}</small></li>
+//                 )}
+//                 {activeSearch.month && (
+//                   <li><small>Month: {getFormattedDateRange()}</small></li>
+//                 )}
+//               </ul>
+//             </div>
+//           )}
+//         </CModalBody>
+        
+//         <CModalFooter>
+//           <CButton color="secondary" onClick={() => setExportModalVisible(false)}>
+//             Cancel
+//           </CButton>
+//           <CButton color="primary" onClick={generateDetailExport} disabled={exportLoading}>
+//             {exportLoading ? (
+//               <>
+//                 <CSpinner size="sm" className="me-1" />
+//                 Exporting...
+//               </>
+//             ) : (
+//               <>
+//                 <i className="fa fa-fw fa-file-excel me-1"></i>
+//                 Export
+//               </>
+//             )}
+//           </CButton>
+//         </CModalFooter>
+//       </CModal>
+
+//       <CCard className='table-container mt-4'>
+//         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+//           <div>
+//             <CButton 
+//               size="sm" 
+//               className="action-btn me-1" 
+//               onClick={() => setSearchModalVisible(true)}
+//             >
+//               <CIcon icon={cilSearch} className='icon' /> Search
+//             </CButton>
+//             {isSearchActive() && (
+//               <CButton 
+//                 size="sm" 
+//                 color="secondary" 
+//                 className="action-btn me-1" 
+//                 onClick={handleResetSearch}
+//               >
+//                 <CIcon icon={cilZoomOut} className='icon' /> Reset Search
+//               </CButton>
+//             )}
+//             <CButton 
+//               size="sm" 
+//               className="action-btn me-1"
+//               onClick={openExportModal}
+//               disabled={exportLoading || data.length === 0}
+//             >
+//               <i className="fa fa-fw fa-file-excel"></i>
+//               Export
+//             </CButton>
+//           </div>
+//           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+//         </CCardHeader>
+
+//         <CCardBody>
+//           <div className="d-flex justify-content-between mb-3">
+//             <div>
+//               {exportMonth && (
+//                 <div className="text-muted small">
+//                   Export Month: {exportMonth}
+//                 </div>
+//               )}
+//             </div>
+//             <div className='d-flex'>
+//               <CFormLabelPro className='mt-1 m-1'>Search:</CFormLabelPro>
+//               <CFormInput
+//                 type="text"
+//                 style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
+//                 className="d-inline-block square-search"
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//               />
+//             </div>
+//           </div>
+
+//           <div className='summary-report'>
+//             <h4 className='summary-title'>Showing Result</h4>
+//             <ul className='summary-list'>
+//               <li><strong>Date:</strong> {getFormattedDateRange()}</li>
+//               {filters?.center && (
+//                 <li><strong>Branch:</strong> {typeof filters.center === 'object' ? filters.center.name : filters.center}</li>
+//               )}
+//               {activeSearch.productId && (
+//                 <li>
+//                   <strong>Product:</strong>{' '}
+//                   {getProductName(activeSearch.productId)}
+//                 </li>
+//               )}
+//               {activeSearch.resellerId && (
+//                 <li>
+//                   <strong>Reseller:</strong>{' '}
+//                   {resellers.find(r => r._id === activeSearch.resellerId)?.businessName || 'Unknown Reseller'}
+//                 </li>
+//               )}
+//               {summary && (
+//                 <li><strong>Total Products:</strong> {summary.totalProducts || 0}</li>
+//               )}
+//             </ul>
+//           </div>
+
+//           <div className="responsive-table-wrapper">
+//             <CTable striped bordered hover className='responsive-table'>
+//               <CTableHead>
+//                 <CTableRow>
+//                   <CTableHeaderCell onClick={() => handleSort('center.name')} className="sortable-header">
+//                     Branch {getSortIcon('center.name')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('productName')} className="sortable-header">
+//                     Product {getSortIcon('productName')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('opening')} className="sortable-header">
+//                     Opening {getSortIcon('opening')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('purchase')} className="sortable-header">
+//                     Purchase {getSortIcon('purchase')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('transferReceive')} className="sortable-header">
+//                     Transfer Received {getSortIcon('transferReceive')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('return')} className="sortable-header">
+//                     Return {getSortIcon('return')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('usage')} className="sortable-header">
+//                     Usage {getSortIcon('usage')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('transferGiven')} className="sortable-header">
+//                     Transfer Given {getSortIcon('transferGiven')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('nc')} className="sortable-header">
+//                     NC {getSortIcon('nc')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('convert')} className="sortable-header">
+//                     Convert {getSortIcon('convert')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('shifting')} className="sortable-header">
+//                     Shifting {getSortIcon('shifting')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('buildingUsage')} className="sortable-header">
+//                     Building new usage {getSortIcon('buildingUsage')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('buildingDamage')} className="sortable-header">
+//                     Building Damage {getSortIcon('buildingDamage')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('other')} className="sortable-header">
+//                     Other {getSortIcon('other')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('repair')} className="sortable-header">
+//                     Repair {getSortIcon('repair')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('damage')} className="sortable-header">
+//                     Damage {getSortIcon('damage')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell onClick={() => handleSort('closing')} className="sortable-header">
+//                     Closing {getSortIcon('closing')}
+//                   </CTableHeaderCell>
+//                 </CTableRow>
+//               </CTableHead>
+//               <CTableBody>
+//                 {filteredData.length > 0 ? (
+//                   <>
+//                     {filteredData.map((item, idx) => (
+//                       <CTableRow key={idx}>
+//                         <CTableDataCell>{item.center?.name || item.center?.centerName || 'N/A'}</CTableDataCell>
+//                         <CTableDataCell>{item.productName || 'N/A'}</CTableDataCell>
+//                         <CTableDataCell>{item.opening || 0}</CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handlePurchaseClick(item)}
+//                             style={{
+//                               border: 'none', 
+//                               background: 'none', 
+//                               cursor: item.purchase > 0 ? 'pointer' : 'default',
+//                               color: item.purchase > 0 ? '#337ab7' : 'inherit'
+//                             }}
+//                             disabled={item.purchase === 0}
+//                           >
+//                             {item.purchase || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleTransferReceiveClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.transferReceive > 0 ? 'pointer' : 'default', color: item.transferReceive > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.transferReceive === 0}
+//                           >
+//                             {item.transferReceive || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleReturnClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.return > 0 ? 'pointer' : 'default', color: item.return > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.return === 0}
+//                           >
+//                             {item.return || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleUsageClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.usage > 0 ? 'pointer' : 'default', color: item.usage > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.usage === 0}
+//                           >
+//                             {item.usage || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleTransferGivenClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.transferGiven > 0 ? 'pointer' : 'default', color: item.transferGiven > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.transferGiven === 0}
+//                           >
+//                             {item.transferGiven || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleNcClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.nc > 0 ? 'pointer' : 'default', color: item.nc > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.nc === 0}
+//                           >
+//                             {item.nc || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleConvertClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.convert > 0 ? 'pointer' : 'default', color: item.convert > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.convert === 0}
+//                           >
+//                             {item.convert || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleShiftingClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.shifting > 0 ? 'pointer' : 'default', color: item.shifting > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.shifting === 0}
+//                           >
+//                             {item.shifting || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleBuildingUsageClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.buildingUsage > 0 ? 'pointer' : 'default', color: item.buildingUsage > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.buildingUsage === 0}
+//                           >
+//                             {item.buildingUsage || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleBuildingDamageClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.buildingDamage > 0 ? 'pointer' : 'default', color: item.buildingDamage > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.buildingDamage === 0}
+//                           >
+//                             {item.buildingDamage || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleOtherClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.other > 0 ? 'pointer' : 'default', color: item.other > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.other === 0}
+//                           >
+//                             {item.other || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleRepairClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.repair > 0 ? 'pointer' : 'default', color: item.repair > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.repair === 0}
+//                           >
+//                             {item.repair || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>
+//                           <button 
+//                             className="btn btn-link p-0 text-decoration-none"
+//                             onClick={() => handleDamageClick(item)}
+//                             style={{border: 'none', background: 'none', cursor: item.damage > 0 ? 'pointer' : 'default', color: item.damage > 0 ? '#337ab7' : 'inherit'}}
+//                             disabled={item.damage === 0}
+//                           >
+//                             {item.damage || 0}
+//                           </button>
+//                         </CTableDataCell>
+//                         <CTableDataCell>{item.closing || 0}</CTableDataCell>
+//                       </CTableRow>
+//                     ))}
+//                     <CTableRow className='total-row'>
+//                       <CTableDataCell colSpan="2"><strong>Total</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.opening}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.purchase}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.transferReceive}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.return}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.usage}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.transferGiven}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.nc}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.convert}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.shifting}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.buildingUsage}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.buildingDamage}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.other}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.repair}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.damage}</strong></CTableDataCell>
+//                       <CTableDataCell><strong>{totals.closing}</strong></CTableDataCell>
+//                     </CTableRow>
+//                   </>
+//                 ) : (
+//                   <CTableRow>
+//                     <CTableDataCell colSpan="18" className="text-center">No data found</CTableDataCell>
+//                   </CTableRow>
+//                 )}
+//               </CTableBody>
+//             </CTable>
+//           </div>
+//         </CCardBody>
+//       </CCard>
+//     </div>
+//   );
+// };
+
+// export default IndentUsageSummary;
+
+
+
+
+
+
+
+
+
+
+
 import '../../css/table.css';
 import '../../css/form.css';
 import React, { useState, useEffect } from 'react';
@@ -90,6 +1176,20 @@ const IndentUsageSummary = () => {
       return center ? center.centerName : cleaned;
     }
     return cleaned;
+  };
+
+  // Splits an activeSearch.month value ("YYYY-MM", the <input type="month">
+  // format) into separate { month, year } strings. UsageDetail.js expects
+  // these as two SEPARATE fields (month 1-12, year 4-digit) to build a date
+  // range — passing the combined "YYYY-MM" string as a single `month` field
+  // (as this file used to) meant `location.state.year` was always missing,
+  // so UsageDetail's month->date-range conversion never actually ran.
+  const splitMonthYear = (monthValue) => {
+    if (!monthValue || !monthValue.includes('-')) {
+      return { month: '', year: '' };
+    }
+    const [year, month] = monthValue.split('-');
+    return { month, year };
   };
 
   const fetchData = async (searchParams = {}, page = 1) => {
@@ -561,6 +1661,7 @@ const IndentUsageSummary = () => {
     if (item.usage > 0) {
       const productName = getProductName(item.productId);
       const centerName = getCenterName(item.center?.id || item.center?._id);
+      const { month, year } = splitMonthYear(activeSearch.month);
       
       navigate('/usage-detail', {
         state: {
@@ -570,7 +1671,8 @@ const IndentUsageSummary = () => {
           centerId: item.center?.id || item.center?._id || '',
           productName: item.productName || '',
           centerName: item.center?.name || item.center?.centerName || '',
-          month: activeSearch.month || ''
+          month,
+          year
         }
       });
     }

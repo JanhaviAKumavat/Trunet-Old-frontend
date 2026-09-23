@@ -9,6 +9,7 @@ const config = {
                           // baseURL: 'https://codiantsolutions.com/api/trunet/api'
                           // baseURL : 'http://192.168.1.34:5000/api'
                            // baseURL: 'http://localhost:5000/api'
+                            //baseURL : 'http://192.168.1.40:5000/api'
 };
 
 export default config;
