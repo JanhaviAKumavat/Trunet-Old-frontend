@@ -1035,6 +1035,573 @@
 
 
 
+// import '../../css/table.css';
+// import '../../css/form.css';
+// import React, { useState, useRef, useEffect } from 'react';
+// import {
+//   CTable,
+//   CTableHead,
+//   CTableRow,
+//   CTableHeaderCell,
+//   CTableBody,
+//   CTableDataCell,
+//   CCard,
+//   CCardBody,
+//   CCardHeader,
+//   CButton,
+//   CFormInput,
+//   CSpinner,
+//   CModal,
+//   CModalHeader,
+//   CModalTitle,
+//   CModalBody,
+//   CModalFooter,
+//   CFormLabel
+// } from '@coreui/react';
+// import CIcon from '@coreui/icons-react';
+// import { cilArrowTop, cilArrowBottom, cilSearch, cilZoomOut } from '@coreui/icons';
+// import { CFormLabel as CFormLabelPro } from '@coreui/react-pro';
+// import axiosInstance from 'src/axiosInstance';
+// import Pagination from 'src/utils/Pagination';
+// import { showError, showSuccess } from 'src/utils/sweetAlerts';
+// import SearchCenterStock from './SearchCenterStock';
+
+// const AvailableStock = () => {
+//   const [data, setData] = useState([]);
+//   const [centers, setCenters] = useState([]);
+//   const [products, setProducts] = useState([]);
+//   const [resellers, setResellers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [searchModalVisible, setSearchModalVisible] = useState(false);
+//   const [exportModalVisible, setExportModalVisible] = useState(false);
+//   const [exportStartDate, setExportStartDate] = useState('');
+//   const [exportEndDate, setExportEndDate] = useState('');
+//   const [activeSearch, setActiveSearch] = useState({ 
+//     product: '', 
+//     center: '', 
+//     resellerId: '',
+//     startDate: '',
+//     endDate: ''
+//   });
+//   const [dropdownOpen, setDropdownOpen] = useState({});
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [totalPages, setTotalPages] = useState(1);
+
+//   const dropdownRefs = useRef({});
+
+//   const fetchData = async (searchParams = {}, page = 1) => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+//       const params = new URLSearchParams();
+      
+//       if (searchParams.product) {
+//         params.append('product', searchParams.product);
+//       }
+//       if (searchParams.center) {
+//         params.append('center', searchParams.center);
+//       }
+//       if (searchParams.resellerId) {
+//         params.append('resellerId', searchParams.resellerId);
+//       }
+//       if (searchParams.startDate) {
+//         params.append('startDate', searchParams.startDate);
+//       }
+//       if (searchParams.endDate) {
+//         params.append('endDate', searchParams.endDate);
+//       }
+//       params.append('page', page);
+      
+//       const url = params.toString() ? `/availableStock/availableStock?${params.toString()}` : '/availableStock/availableStock';
+//       const response = await axiosInstance.get(url);
+      
+//       if (response.data.success) {
+//         setData(response.data.data.stock);
+//         setCurrentPage(response.data.data.pagination.currentPage);
+//         setTotalPages(response.data.data.pagination.totalPages);
+//       } else {
+//         const errorMessage = response.data.message || 'API returned unsuccessful response';
+//         setError(errorMessage);
+//         console.error('Backend error:', response.data);
+//       }
+//     } catch (err) {
+//       if (err.response) {
+//         const errorMessage = err.response.data?.message || 
+//                             err.response.data?.error || 
+//                             `Error ${err.response.status}: ${err.response.statusText}`;
+//         setError(errorMessage);
+//         console.error('Error response:', err.response.data);
+//       } else if (err.request) {
+//         setError('No response received from server. Please check your network connection.');
+//         console.error('Error request:', err.request);
+//       } else {
+//         setError(err.message || 'An error occurred while fetching data');
+//         console.error('Error message:', err.message);
+//       }
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const fetchCenters = async () => {
+//     try {
+//       const response = await axiosInstance.get('/centers');
+//       if (response.data.success) {
+//         setCenters(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching centers:', error);
+//     }
+//   };
+
+//   const fetchProducts = async () => {
+//     try {
+//       const response = await axiosInstance.get('/products/all');
+//       if (response.data.success) {
+//         setProducts(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching products:', error);
+//     }
+//   };
+
+//   const fetchResellers = async () => {
+//     try {
+//       const response = await axiosInstance.get('/resellers');
+//       if (response.data.success) {
+//         setResellers(response.data.data);
+//       }
+//     } catch (error) {
+//       console.error('Error fetching resellers:', error);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchData();
+//     fetchCenters();
+//     fetchProducts();
+//     fetchResellers();
+//   }, []);
+
+//   const handlePageChange = (page) => {
+//     if (page < 1 || page > totalPages) return;
+//     fetchData(activeSearch, page);
+//   };
+
+//   const handleSort = (key) => {
+//     let direction = 'ascending';
+//     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+//       direction = 'descending';
+//     }
+//     setSortConfig({ key, direction });
+
+//     const sortedData = [...data].sort((a, b) => {
+//       let aValue = a;
+//       let bValue = b;
+      
+//       if (key.includes('.')) {
+//         const keys = key.split('.');
+//         aValue = keys.reduce((obj, k) => obj && obj[k], a);
+//         bValue = keys.reduce((obj, k) => obj && obj[k], b);
+//       } else {
+//         aValue = a[key];
+//         bValue = b[key];
+//       }
+      
+//       if (aValue < bValue) {
+//         return direction === 'ascending' ? -1 : 1;
+//       }
+//       if (aValue > bValue) {
+//         return direction === 'ascending' ? 1 : -1;
+//       }
+//       return 0;
+//     });
+
+//     setData(sortedData);
+//   };
+
+//   const getSortIcon = (key) => {
+//     if (sortConfig.key !== key) {
+//       return null;
+//     }
+//     return sortConfig.direction === 'ascending'
+//       ? <CIcon icon={cilArrowTop} className="ms-1" />
+//       : <CIcon icon={cilArrowBottom} className="ms-1" />;
+//   };
+
+//   const handleSearch = (searchData) => {
+//     setActiveSearch(searchData);
+//     fetchData(searchData, 1);
+//   };
+
+//   const handleResetSearch = () => {
+//     setActiveSearch({ 
+//       product: '', 
+//       center: '', 
+//       resellerId: '', 
+//       startDate: '', 
+//       endDate: '' 
+//     });
+//     setSearchTerm('');
+//     fetchData({}, 1);
+//   };
+
+//   const openExportModal = () => {
+//     // Pre-fill with existing date filters from active search
+//     setExportStartDate(activeSearch.startDate || '');
+//     setExportEndDate(activeSearch.endDate || '');
+//     setExportModalVisible(true);
+//   };
+
+// const generateDetailExport = async () => {
+//   try {
+//     setLoading(true);
+    
+//     // Validate dates
+//     if (exportStartDate && exportEndDate && exportStartDate > exportEndDate) {
+//       showError('Start date cannot be greater than end date');
+//       setLoading(false);
+//       return;
+//     }
+    
+//     const params = new URLSearchParams();
+    
+//     // ONLY use startDate and endDate for export
+//     if (exportStartDate) {
+//       params.append('startDate', exportStartDate);
+//     }
+//     if (exportEndDate) {
+//       params.append('endDate', exportEndDate);
+//     }
+    
+//     // Add export flag
+//     params.append('export', 'true');
+    
+//     const apiUrl = `/availableStock/availableStock?${params.toString()}`;
+//     console.log('Export API URL:', apiUrl);
+    
+//     // Important: Set responseType to 'blob' to handle the Excel file
+//     const response = await axiosInstance.get(apiUrl, {
+//       responseType: 'blob'
+//     });
+    
+//     // Check if response is a blob (file)
+//     if (response.data instanceof Blob) {
+//       // Create filename with date range
+//       let filename = `available_stock_export`;
+//       if (exportStartDate && exportEndDate) {
+//         filename += `_${exportStartDate}_to_${exportEndDate}`;
+//       } else if (exportStartDate) {
+//         filename += `_from_${exportStartDate}`;
+//       } else if (exportEndDate) {
+//         filename += `_until_${exportEndDate}`;
+//       } else {
+//         filename += `_${new Date().toISOString().split('T')[0]}`;
+//       }
+      
+//       // Check content type to determine file extension
+//       const contentType = response.headers['content-type'];
+//       if (contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+//         filename += '.xlsx';
+//       } else if (contentType === 'application/vnd.ms-excel') {
+//         filename += '.xls';
+//       } else {
+//         filename += '.xlsx'; // Default to xlsx
+//       }
+      
+//       // Create download link
+//       const blob = new Blob([response.data], { type: contentType });
+//       const link = document.createElement('a');
+//       const downloadUrl = URL.createObjectURL(blob);
+      
+//       link.setAttribute('href', downloadUrl);
+//       link.setAttribute('download', filename);
+//       link.style.visibility = 'hidden';
+      
+//       document.body.appendChild(link);
+//       link.click();
+//       document.body.removeChild(link);
+//       URL.revokeObjectURL(downloadUrl);
+      
+//       showSuccess('Export completed successfully!');
+//       setExportModalVisible(false);
+//       // Reset export date fields
+//       setExportStartDate('');
+//       setExportEndDate('');
+//     } else {
+//       throw new Error('Unexpected response format from server');
+//     }
+  
+//   } catch (error) {
+//     console.error('Error generating export:', error);
+    
+//     // Try to parse error message from blob response if available
+//     let errorMessage = 'Error generating export file';
+//     if (error.response && error.response.data instanceof Blob) {
+//       try {
+//         const text = await error.response.data.text();
+//         const parsed = JSON.parse(text);
+//         errorMessage = parsed.message || parsed.error || errorMessage;
+//       } catch (e) {
+//         errorMessage = error.response.statusText || errorMessage;
+//       }
+//     } else if (error.message) {
+//       errorMessage = error.message;
+//     }
+    
+//     showError(errorMessage);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+//   const filteredData = data.filter(data => {
+//     if (activeSearch.product || activeSearch.center || activeSearch.resellerId || activeSearch.startDate || activeSearch.endDate) {
+//       return true;
+//     }
+//     return Object.values(data).some(value => {
+//       if (typeof value === 'object' && value !== null) {
+//         return Object.values(value).some(nestedValue => 
+//           nestedValue && nestedValue.toString().toLowerCase().includes(searchTerm.toLowerCase())
+//         );
+//       }
+//       return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+//     });
+//   });
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       const newDropdownState = {};
+//       let shouldUpdate = false;
+      
+//       Object.keys(dropdownRefs.current).forEach(key => {
+//         if (dropdownRefs.current[key] && !dropdownRefs.current[key].contains(event.target)) {
+//           newDropdownState[key] = false;
+//           shouldUpdate = true;
+//         }
+//       });
+      
+//       if (shouldUpdate) {
+//         setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
+//       }
+//     };
+
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => {
+//       document.removeEventListener('mousedown', handleClickOutside);
+//     };
+//   }, []);
+
+//   if (loading) {
+//     return (
+//       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
+//         <CSpinner color="primary" />
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="alert alert-danger" role="alert">
+//         {error}
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div>
+//       <div className='title'>Available Stock</div>
+    
+//       <SearchCenterStock
+//         visible={searchModalVisible}
+//         onClose={() => setSearchModalVisible(false)}
+//         onSearch={handleSearch}
+//         centers={centers}
+//         products={products}
+//         resellers={resellers}
+//       />
+
+//      {/* Export Modal */}
+// <CModal visible={exportModalVisible} onClose={() => setExportModalVisible(false)} size="md">
+//   <CModalHeader>
+//     <CModalTitle>Export Stock Data</CModalTitle>
+//   </CModalHeader>
+  
+//   <CModalBody>
+//     <div className="form-group mb-3">
+//       <CFormLabel htmlFor="exportStartDate">Start Date (Optional)</CFormLabel>
+//       <CFormInput
+//         type="date"
+//         id="exportStartDate"
+//         value={exportStartDate}
+//         onChange={(e) => setExportStartDate(e.target.value)}
+//         placeholder="Select start date"
+//       />
+//       <small className="text-muted">Leave empty to include all records from beginning</small>
+//     </div>
+    
+//     <div className="form-group mb-3">
+//       <CFormLabel htmlFor="exportEndDate">End Date (Optional)</CFormLabel>
+//       <CFormInput
+//         type="date"
+//         id="exportEndDate"
+//         value={exportEndDate}
+//         onChange={(e) => setExportEndDate(e.target.value)}
+//         placeholder="Select end date"
+//       />
+//       <small className="text-muted">Leave empty to include all records until today</small>
+//     </div>
+
+//     {/* Optional: Show info message that other filters won't apply */}
+//     <div className="mt-3 p-2 bg-info bg-opacity-10 rounded">
+//       <small className="text-info">
+//         <i className="fa fa-info-circle"></i> Note: Export will include all centers, products, and resellers within the selected date range.
+//       </small>
+//     </div>
+//   </CModalBody>
+  
+//   <CModalFooter>
+//     <CButton color="secondary" onClick={() => setExportModalVisible(false)}>
+//       Cancel
+//     </CButton>
+//     <CButton color="primary" onClick={generateDetailExport}>
+//       <i className="fa fa-fw fa-file-excel me-1"></i>
+//       Export
+//     </CButton>
+//   </CModalFooter>
+// </CModal>
+
+//       <CCard className='table-container mt-4'>
+//         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
+//           <div>
+//             <CButton 
+//               size="sm" 
+//               className="action-btn me-1"
+//               onClick={() => setSearchModalVisible(true)}
+//             >
+//               <CIcon icon={cilSearch} className='icon' /> Search
+//             </CButton>
+//             {(activeSearch.product || activeSearch.center || activeSearch.resellerId || activeSearch.startDate || activeSearch.endDate) && (
+//               <CButton 
+//                 size="sm" 
+//                 color="secondary" 
+//                 className="action-btn me-1"
+//                 onClick={handleResetSearch}
+//               >
+//                 <CIcon icon={cilZoomOut} className='icon' />
+//                 Reset Search
+//               </CButton>
+//             )}
+//             <CButton 
+//               size="sm" 
+//               className="action-btn me-1"
+//               onClick={openExportModal}
+//             >
+//               <i className="fa fa-fw fa-file-excel"></i>
+//               Export
+//             </CButton>
+//             <CButton 
+//               size="sm" 
+//               className="action-btn me-1"
+//             >
+//               <i className="fa fa-fw fa-print"></i>
+//               Print
+//             </CButton>
+//           </div>
+          
+//           <div>
+//             <Pagination
+//               currentPage={currentPage}
+//               totalPages={totalPages}
+//               onPageChange={handlePageChange}
+//             />
+//           </div>
+//         </CCardHeader>
+        
+//         <CCardBody>
+//           <div className="d-flex justify-content-between mb-3">
+//             <div>
+//               {(activeSearch.resellerId || activeSearch.startDate || activeSearch.endDate) && (
+//                 <div className="text-muted small">
+//                   {activeSearch.resellerId && `Reseller: ${resellers.find(r => r._id === activeSearch.resellerId)?.businessName || activeSearch.resellerId} | `}
+//                   {activeSearch.startDate && `From: ${activeSearch.startDate} | `}
+//                   {activeSearch.endDate && `To: ${activeSearch.endDate}`}
+//                 </div>
+//               )}
+//             </div>
+//             <div className='d-flex'>
+//               <CFormLabelPro className='mt-1 m-1'>Search:</CFormLabelPro>
+//               <CFormInput
+//                 type="text"
+//                 style={{maxWidth: '350px', height: '30px', borderRadius: '0'}}
+//                 className="d-inline-block square-search"
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
+//               />
+//             </div>
+//           </div>
+          
+//           <div className="responsive-table-wrapper">
+//             <CTable striped bordered hover className='responsive-table'>
+//               <CTableHead>
+//                 <CTableRow>
+//                   <CTableHeaderCell scope="col" onClick={() => handleSort('outlet')} className="sortable-header">
+//                     Branch {getSortIcon('outlet')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell scope="col" onClick={() => handleSort('date')} className="sortable-header">
+//                     Product {getSortIcon('date')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell scope="col" onClick={() => handleSort('invoiceNo')} className="sortable-header">
+//                     Category {getSortIcon('invoiceNo')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell scope="col" onClick={() => handleSort('vendor.businessName')} className="sortable-header">
+//                     Stock {getSortIcon('vendor.businessName')}
+//                   </CTableHeaderCell>
+//                   <CTableHeaderCell scope="col" onClick={() => handleSort('damagedQuantity')} className="sortable-header">
+//                     Damage {getSortIcon('damagedQuantity')}
+//                   </CTableHeaderCell>
+//                 </CTableRow>
+//               </CTableHead>
+//               <CTableBody>
+//                 {filteredData.length > 0 ? (
+//                   <>
+//                     {filteredData.map((data) => (
+//                       <CTableRow key={data._id}>
+//                         <CTableDataCell>
+//                           {data.centerName || ''}
+//                         </CTableDataCell>
+//                         <CTableDataCell>{data.productName}</CTableDataCell>
+//                         <CTableDataCell>{data.productCategory?.name || ''}</CTableDataCell>
+//                         <CTableDataCell>{data.availableQuantity || 0}</CTableDataCell>
+//                         <CTableDataCell>{data.damagedQuantity || 0}</CTableDataCell>
+//                       </CTableRow>
+//                     ))}
+//                   </>
+//                 ) : (
+//                   <CTableRow>
+//                     <CTableDataCell colSpan="11" className="text-center">
+//                       No data found
+//                     </CTableDataCell>
+//                   </CTableRow>
+//                 )}
+//               </CTableBody>
+//             </CTable>
+//           </div>
+//         </CCardBody>
+//       </CCard>
+//     </div>
+//   );
+// };
+
+// export default AvailableStock;
+
+
+
+
+ 
 import '../../css/table.css';
 import '../../css/form.css';
 import React, { useState, useRef, useEffect } from 'react';
@@ -1065,8 +1632,10 @@ import axiosInstance from 'src/axiosInstance';
 import Pagination from 'src/utils/Pagination';
 import { showError, showSuccess } from 'src/utils/sweetAlerts';
 import SearchCenterStock from './SearchCenterStock';
-
+import { useNavigate } from 'react-router-dom';
+ 
 const AvailableStock = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [centers, setCenters] = useState([]);
   const [products, setProducts] = useState([]);
@@ -1089,9 +1658,9 @@ const AvailableStock = () => {
   const [dropdownOpen, setDropdownOpen] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+ 
   const dropdownRefs = useRef({});
-
+ 
   const fetchData = async (searchParams = {}, page = 1) => {
     try {
       setLoading(true);
@@ -1145,7 +1714,7 @@ const AvailableStock = () => {
       setLoading(false);
     }
   };
-
+ 
   const fetchCenters = async () => {
     try {
       const response = await axiosInstance.get('/centers');
@@ -1156,7 +1725,7 @@ const AvailableStock = () => {
       console.error('Error fetching centers:', error);
     }
   };
-
+ 
   const fetchProducts = async () => {
     try {
       const response = await axiosInstance.get('/products/all');
@@ -1167,7 +1736,7 @@ const AvailableStock = () => {
       console.error('Error fetching products:', error);
     }
   };
-
+ 
   const fetchResellers = async () => {
     try {
       const response = await axiosInstance.get('/resellers');
@@ -1178,26 +1747,26 @@ const AvailableStock = () => {
       console.error('Error fetching resellers:', error);
     }
   };
-
+ 
   useEffect(() => {
     fetchData();
     fetchCenters();
     fetchProducts();
     fetchResellers();
   }, []);
-
+ 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
     fetchData(activeSearch, page);
   };
-
+ 
   const handleSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
-
+ 
     const sortedData = [...data].sort((a, b) => {
       let aValue = a;
       let bValue = b;
@@ -1219,10 +1788,10 @@ const AvailableStock = () => {
       }
       return 0;
     });
-
+ 
     setData(sortedData);
   };
-
+ 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) {
       return null;
@@ -1231,12 +1800,12 @@ const AvailableStock = () => {
       ? <CIcon icon={cilArrowTop} className="ms-1" />
       : <CIcon icon={cilArrowBottom} className="ms-1" />;
   };
-
+ 
   const handleSearch = (searchData) => {
     setActiveSearch(searchData);
     fetchData(searchData, 1);
   };
-
+ 
   const handleResetSearch = () => {
     setActiveSearch({ 
       product: '', 
@@ -1248,14 +1817,14 @@ const AvailableStock = () => {
     setSearchTerm('');
     fetchData({}, 1);
   };
-
+ 
   const openExportModal = () => {
     // Pre-fill with existing date filters from active search
     setExportStartDate(activeSearch.startDate || '');
     setExportEndDate(activeSearch.endDate || '');
     setExportModalVisible(true);
   };
-
+ 
 const generateDetailExport = async () => {
   try {
     setLoading(true);
@@ -1357,7 +1926,90 @@ const generateDetailExport = async () => {
     setLoading(false);
   }
 };
-
+ 
+  // ---------- Clickable Stock / Damage (same pattern as Indent / Usage Summary) ----------
+  const isObjectId = (v) => typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v);
+ 
+  const getRowIds = (item) => {
+    const pick = (...vals) => vals.find(isObjectId);
+    const centerId =
+      pick(item.center?._id, item.center?.id, item.centerId, item.center) ||
+      centers.find((c) => c.centerName === item.centerName)?._id ||
+      '';
+    const productId =
+      pick(item.product?._id, item.product?.id, item.productId, item.product) ||
+      products.find((p) => p.productTitle === item.productName)?._id ||
+      '';
+    return { centerId, productId };
+  };
+ 
+  // Stock click ->
+  //   Warehouse (centerType 'Outlet') : Transfer Detail (stock given / sent out to branches)
+  //   Branch    (centerType 'Center') : Usage Detail (customer / building usage), all dates
+  const handleStockClick = (item) => {
+    if ((item.availableQuantity || 0) > 0) {
+      const { centerId, productId } = getRowIds(item);
+ 
+      if (!centerId || !productId) {
+        console.error('Missing center or product ID:', { centerId, productId });
+        showError('Unable to open details for this row');
+        return;
+      }
+ 
+      const centerObj = centers.find((c) => c._id === centerId);
+      const productObj = products.find((p) => p._id === productId);
+      const centerType = item.center?.centerType || centerObj?.centerType || '';
+      const isWarehouse = String(centerType).toLowerCase() === 'outlet';
+ 
+      const productName = item.productName || productObj?.productTitle || '';
+      const centerName = item.centerName || centerObj?.centerName || '';
+ 
+      if (isWarehouse) {
+        const params = new URLSearchParams({
+          product: productObj?.productTitle || productName,
+          center: centerObj?.centerName || centerName,
+          productName: encodeURIComponent(productName),
+          centerName: encodeURIComponent(centerName),
+          transferType: 'given'
+        });
+        navigate(`/transfer-detail?${params.toString()}`);
+        return;
+      }
+ 
+      // Send an explicit all-time date range, otherwise the report only shows the current month
+      const pad = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+ 
+      navigate('/usage-detail', {
+        state: {
+          productId,
+          centerId,
+          productName,
+          centerName,
+          month: '',
+          year: '',
+          startDate: '2020-01-01',
+          endDate: today
+        }
+      });
+    }
+  };
+ 
+  // Damage click -> Transaction Report filtered on Damage
+  const handleDamageClick = (item) => {
+    if ((item.damagedQuantity || 0) > 0) {
+      const params = new URLSearchParams({
+        product: item.productName || '',
+        center: item.centerName || '',
+        usageType: 'Damage',
+        productName: encodeURIComponent(item.productName || ''),
+        centerName: encodeURIComponent(item.centerName || '')
+      });
+      navigate(`/transaction-report?${params.toString()}`);
+    }
+  };
+ 
   const filteredData = data.filter(data => {
     if (activeSearch.product || activeSearch.center || activeSearch.resellerId || activeSearch.startDate || activeSearch.endDate) {
       return true;
@@ -1371,7 +2023,7 @@ const generateDetailExport = async () => {
       return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
     });
   });
-
+ 
   useEffect(() => {
     const handleClickOutside = (event) => {
       const newDropdownState = {};
@@ -1388,13 +2040,13 @@ const generateDetailExport = async () => {
         setDropdownOpen(prev => ({ ...prev, ...newDropdownState }));
       }
     };
-
+ 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
+ 
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
@@ -1402,7 +2054,7 @@ const generateDetailExport = async () => {
       </div>
     );
   }
-
+ 
   if (error) {
     return (
       <div className="alert alert-danger" role="alert">
@@ -1410,7 +2062,7 @@ const generateDetailExport = async () => {
       </div>
     );
   }
-
+ 
   return (
     <div>
       <div className='title'>Available Stock</div>
@@ -1423,7 +2075,7 @@ const generateDetailExport = async () => {
         products={products}
         resellers={resellers}
       />
-
+ 
      {/* Export Modal */}
 <CModal visible={exportModalVisible} onClose={() => setExportModalVisible(false)} size="md">
   <CModalHeader>
@@ -1454,7 +2106,7 @@ const generateDetailExport = async () => {
       />
       <small className="text-muted">Leave empty to include all records until today</small>
     </div>
-
+ 
     {/* Optional: Show info message that other filters won't apply */}
     <div className="mt-3 p-2 bg-info bg-opacity-10 rounded">
       <small className="text-info">
@@ -1473,7 +2125,7 @@ const generateDetailExport = async () => {
     </CButton>
   </CModalFooter>
 </CModal>
-
+ 
       <CCard className='table-container mt-4'>
         <CCardHeader className='card-header d-flex justify-content-between align-items-center'>
           <div>
@@ -1575,8 +2227,26 @@ const generateDetailExport = async () => {
                         </CTableDataCell>
                         <CTableDataCell>{data.productName}</CTableDataCell>
                         <CTableDataCell>{data.productCategory?.name || ''}</CTableDataCell>
-                        <CTableDataCell>{data.availableQuantity || 0}</CTableDataCell>
-                        <CTableDataCell>{data.damagedQuantity || 0}</CTableDataCell>
+                        <CTableDataCell>
+                          <button
+                            className="btn btn-link p-0 text-decoration-none"
+                            onClick={() => handleStockClick(data)}
+                            style={{border: 'none', background: 'none', cursor: data.availableQuantity > 0 ? 'pointer' : 'default', color: data.availableQuantity > 0 ? '#337ab7' : 'inherit'}}
+                            disabled={!(data.availableQuantity > 0)}
+                          >
+                            {data.availableQuantity || 0}
+                          </button>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <button
+                            className="btn btn-link p-0 text-decoration-none"
+                            onClick={() => handleDamageClick(data)}
+                            style={{border: 'none', background: 'none', cursor: data.damagedQuantity > 0 ? 'pointer' : 'default', color: data.damagedQuantity > 0 ? '#337ab7' : 'inherit'}}
+                            disabled={!(data.damagedQuantity > 0)}
+                          >
+                            {data.damagedQuantity || 0}
+                          </button>
+                        </CTableDataCell>
                       </CTableRow>
                     ))}
                   </>
@@ -1595,5 +2265,6 @@ const generateDetailExport = async () => {
     </div>
   );
 };
-
+ 
 export default AvailableStock;
+ 
